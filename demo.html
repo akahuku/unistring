@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Unistring Test</title>
+		<script type="text/javascript" src="unistring.js"></script>
+		<style>
+#i1 {
+	width:100%;
+	font-size:xx-large;
+	box-sizing:border-box;
+}
+#d1 {
+	margin:1em 0 0 0;
+	border:1px solid silver;
+	padding:8px;
+	white-space:pre;
+	font-family:monospace;
+	font-size:medium;
+}
+		</style>
+	</head>
+	<body>
+		<h1>Unistring Test</h1>
+		<div>
+			<input id="i1" placeholder="enter any text here and hit enter key...">
+		</div>
+		<div id="d1"></div>
+		<script type="text/javascript">
+document.getElementById('i1').addEventListener('keypress', function (e) {
+	if (e.keyCode == 13) {
+		var value = e.target.value;
+		value = value.replace(/\\u(1[0-9a-fA-F]{4,5}|[0-9a-fA-F]{4})/g, function ($0, $1) {
+			return Unistring.getUTF16FromCodePoint(parseInt($1, 16));
+		});
+
+		document.getElementById('d1').textContent =
+			'Text: ' + value + '\n' +
+			'UTF-16 sequence: [' + value.split('').map(function (a) {return 'U+' + ('0000' + a.charCodeAt(0).toString(16).toUpperCase()).substr(-4)}).join(' ') + ']\n' +
+			'\n' + Unistring(value).dump(true);
+
+		e.target.value = '';
+	}
+}, false);
+document.getElementById('i1').focus();
+		</script>
+	</body>
+</html>
