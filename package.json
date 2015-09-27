@@ -1,14 +1,14 @@
 {
-  "name": "unistring",
-  "version": "0.0.1",
-  "description": "Unicode aware pseudo string",
-  "main": "unistring.js",
-  "scripts": {
-    "test": "test/index.js"
-  },
-  "keywords": [
-    "unicode"
-  ],
-  "author": "akahuku@gmail.com",
-  "license": "MIT"
+	"name": "unistring",
+	"version": "0.1.2",
+	"description": "Unicode aware pseudo string",
+	"main": "unistring.js",
+	"author": "akahuku@gmail.com",
+	"keywords": [
+		"unicode"
+	],
+	"license": "MIT",
+	"scripts": {
+		"test": "test/index.js"
+	}
 }
