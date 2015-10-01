@@ -33,6 +33,33 @@ us.insert(0, "C'est ");
 us.delete(-1);
 us.append('!');
 us.toString();   // returns "C'est délicieux!" as string
+
+// break into words by UAX#29 rule
+var words = Unistring.getWords('漢字カタカナひらがな1.23');
+/*
+ * words = [
+ *  {
+ *   "text": "漢字",
+ *   "index": 0,
+ *   "length": 2
+ *  },
+ *  {
+ *   "text": "カタカナ",
+ *   "index": 2,
+ *   "length": 4
+ *  },
+ *  {
+ *   "text": "ひらがな",
+ *   "index": 6,
+ *   "length": 4
+ *  },
+ *  {
+ *   "text": "1.23",
+ *   "index": 10,
+ *   "length": 4
+ *  }
+ * ]
+ */
 ```
 
 ## for standard web pages
@@ -76,26 +103,33 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 
 ### Properties
 
-* `length`
+* `length: number`
 
 ### Methods
 
-* `clone()`
-* `dump()`
-* `toString()`
-* `delete(start, length)`
-* `insert(s, start)`
-* `append(s)`
-* `codePointsAt(index)`
-* `clusterAt(index)`
-* `rawStringAt(index)`
-* `rawIndexAt(index)`
+* `clone(): Unistring`
+* `dump(): string`
+* `toString(): string`
+* `delete(start, length): Unistring`
+* `insert(str, start): Unistring`
+* `append(str): Unistring`
+* `codePointsAt(index): number[]`
+* `clusterAt(index): string`
+* `rawStringAt(index): string`
+* `rawIndexAt(index): number`
 * `forEach(callback [,thisObj])`
-* `charAt(index)`
-* `charCodeAt(index)`
-* `substring(start, end)`
-* `substr(start, length)`
-* `slice(start, end)`
-* `concat(s)`
-* `indexOf(s)`
-* `lastIndexOf(s)`
+* `charAt(index): string`
+* `charCodeAt(index): number`
+* `substring(start, end): Unistring`
+* `substr(start, length): Unistring`
+* `slice(start, end): Unistring`
+* `concat(str): Unistring`
+* `indexOf(str): number`
+* `lastIndexOf(str): number`
+
+### Class Methods
+
+* `getUTF16FromCodePoint(codePoint): string`
+* `getGBPCodeFromName(name): number`
+* `getWBPCodeFromName(name): number`
+* `getWords(str): object[]`

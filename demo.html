@@ -6,6 +6,7 @@
 		<script type="text/javascript" src="unistring.js"></script>
 		<style>
 #i1 {
+	margin:0 0 8px 0;
 	width:100%;
 	font-size:xx-large;
 	box-sizing:border-box;
@@ -25,20 +26,37 @@
 		<div>
 			<input id="i1" placeholder="enter any text here and hit enter key...">
 		</div>
+		<div>
+			<label><input type="radio" name="dumptype" value="1" checked="checked"> Dump grapheme cluster info</label>
+			<label><input type="radio" name="dumptype" value="2"> Dump word boundary info</label>
 		<div id="d1"></div>
 		<script type="text/javascript">
 document.getElementById('i1').addEventListener('keypress', function (e) {
 	if (e.keyCode == 13) {
-		var value = e.target.value;
-		value = value.replace(/\\u(1[0-9a-fA-F]{4,5}|[0-9a-fA-F]{4})/g, function ($0, $1) {
-			return Unistring.getUTF16FromCodePoint(parseInt($1, 16));
-		});
+		var value = e.target.value.replace(
+			/\\u(1[0-9a-fA-F]{4,5}|[0-9a-fA-F]{4})/g,
+			function ($0, $1) {
+				return Unistring.getUTF16FromCodePoint(parseInt($1, 16));
+			}
+		);
+		var seq = value.split('').map(function (a) {
+			return 'U+' + ('0000' + a.charCodeAt(0)
+				.toString(16).toUpperCase()).substr(-4);
+		}).join(' ');
+
+		switch (document.querySelector('[name="dumptype"]:checked').value - 0) {
+		case 1:
+			var dump = Unistring(value).dump(true);
+			break;
+		case 2:
+			var dump = JSON.stringify(Unistring.getWords(value), null, ' ');;
+			break;
+		}
 
 		document.getElementById('d1').textContent =
 			'Text: ' + value + '\n' +
-			'UTF-16 sequence: [' + value.split('').map(function (a) {return 'U+' + ('0000' + a.charCodeAt(0).toString(16).toUpperCase()).substr(-4)}).join(' ') + ']\n' +
-			'\n' + Unistring(value).dump(true);
-
+			'UTF-16 sequence: [' + seq + ']\n' +
+			'\n' + dump;
 		e.target.value = '';
 	}
 }, false);

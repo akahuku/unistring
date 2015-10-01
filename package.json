@@ -1,13 +1,20 @@
 {
 	"name": "unistring",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Unicode aware pseudo string",
 	"main": "unistring.js",
 	"author": "akahuku@gmail.com",
+	"devDependencies": {
+		"minimist": "~1.2.0"
+	},
 	"keywords": [
 		"unicode"
 	],
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/akahuku/unistring.git"
+	},
 	"scripts": {
 		"test": "test/index.js"
 	}

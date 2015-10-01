@@ -22,8 +22,8 @@ var tests = {
 					return;
 				}
 
-				var result = Unistring.find(codePoint);
-				test.eq('#' + lineIndex + ': ' + re[1], code, result);
+				var result = Unistring.findGraphemeBreakProp(codePoint);
+				test.eq('line ' + (lineIndex + 1) + ': ' + re[1], code, result);
 			},
 			function () {
 				test.done();
@@ -33,7 +33,7 @@ var tests = {
 	},
 	testGraphemeBreak: function (test) {
 		readFileByLine(
-			__dirname + '/../unicode-data/GraphemeBreakTest.txt',
+			__dirname + '/GraphemeBreakTest.txt',
 			function (line, lineIndex) {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
@@ -48,7 +48,7 @@ var tests = {
 				});
 
 				var result = (new Unistring(testString)).dump();
-				test.eq('#' + lineIndex, line, result);
+				test.eq('line ' + (lineIndex + 1), line, result);
 			},
 			function () {
 				test.done();
@@ -232,6 +232,44 @@ var tests = {
 		test.eq('#1-1', -1, s.lastIndexOf('か'));
 		test.eq('#1-2', -1, s.lastIndexOf('\u3099'));
 		test.eq('#1-3', 1, s.lastIndexOf('き\u3099'));
+	},
+	testGetWords: function (test) {
+		readFileByLine(
+			__dirname + '/WordBreakTest.txt',
+			function (line, lineIndex) {
+				line = line.replace(/#.*$/, '');
+				line = line.replace(/^\s+|\s+$/g, '');
+				if (!/^÷ .+ ÷$/.test(line)) return;
+
+				var testString = '';
+				line.replace(/[0-9A-F]+/g, function ($0) {
+					testString += Unistring.getUTF16FromCodePoint(
+						parseInt($0, 16)
+					);
+					return $0;
+				});
+
+				var result = [];
+				Unistring.getWords(testString).forEach(function (word) {
+					var tmp = [];
+					Unistring(word.text).forEach(function (cluster) {
+						tmp.push.apply(tmp, cluster.codePoints.map(function (cp) {
+							return cp >= 0x10000 ?
+								cp.toString(16).toUpperCase() :
+								('0000' + cp.toString(16).toUpperCase()).substr(-4);
+						}));
+					});
+					result.push(tmp.join(' × '));
+				});
+				result = '÷ ' + result.join(' ÷ ') + ' ÷';
+
+				test.eq('line ' + (lineIndex + 1), line, result);
+			},
+			function () {
+				test.done();
+			}
+		);
+		return false;
 	}
 };
 
@@ -249,74 +287,87 @@ function readFileByLine (fileName, callback, callback2) {
 	});
 }
 
-var availableTests = Object.keys(tests)
-	.filter(function(t){return /^test/.test(t)});
-var testCount = 0;
-var assertCount = 0;
-var failedCount = 0;
-var startTime = Date.now();
-availableTests.forEach(function (t) {
-	var tester = {
-		testName: t,
-		assertCount: 0,
-		failed: 0,
-		log: [],
-		fail: function (label) {
-			this.failed++;
-			this.log.push(label);
-		},
-		eq: function (label, expected, actual) {
-			this.assertCount++;
-			if (expected != actual) {
+
+function main () {
+	var availableTests = Object.keys(tests)
+		.filter(function(t){return /^test/.test(t)});
+	var testCount = 0;
+	var assertCount = 0;
+	var failedCount = 0;
+	var startTime = Date.now();
+	availableTests.forEach(function (t) {
+		var tester = {
+			testName: t,
+			assertCount: 0,
+			failed: 0,
+			log: [],
+			fail: function (label) {
 				this.failed++;
-				this.log.push(
-					'---- ' + label + ' ----',
-					'expected: ' + expected,
-					'  actual: ' + actual
-				);
-			}
-		},
-		t: function (label, condition) {
-			this.assertCount++;
-			if (!condition) {
-				this.failed++;
-				this.log.push(
-					'---- ' + label + ' ----'
-				);
-			}
-		},
-		done: function () {
-			assertCount += this.assertCount;
-			failedCount += this.failed;
-			if (this.failed) {
-				console.log('******** ' + this.testName + ' ********');
-				console.log('\t' + this.log.join('\n\t'));
-			}
-			testCount++;
-			if (testCount >= availableTests.length) {
-				if (failedCount) {
-					console.log(
-						'\n' +
-						availableTests.length + ' test(s), ' +
-						assertCount + ' assertion(s), ' +
-						failedCount + ' failed.');
-					process.exit(1);
+				this.log.push(label);
+				return false;
+			},
+			eq: function (label, expected, actual) {
+				this.assertCount++;
+				if (expected != actual) {
+					this.failed++;
+					this.log.push(
+						'---- ' + label + ' ----',
+						'expected: ' + expected,
+						'  actual: ' + actual
+					);
+					return false;
 				}
-				else {
-					console.log('passed in ' + ((Date.now() - startTime) / 1000).toFixed(2) + ' secs.');
+				return true;
+			},
+			t: function (label, condition) {
+				this.assertCount++;
+				if (!condition) {
+					this.failed++;
+					this.log.push(
+						'---- ' + label + ' ----'
+					);
 				}
+				return true;
+			},
+			done: function () {
+				assertCount += this.assertCount;
+				failedCount += this.failed;
+				if (this.failed) {
+					console.log('******** ' + this.testName + ' ********');
+					console.log('\t' + this.log.join('\n\t'));
+				}
+				testCount++;
+				if (testCount >= availableTests.length) {
+					if (failedCount) {
+						console.log(
+							'\n' +
+							availableTests.length + ' test(s), ' +
+							assertCount + ' assertion(s), ' +
+							failedCount + ' failed.');
+						process.exit(1);
+					}
+					else {
+						console.log(
+							'\n' +
+							availableTests.length + ' test(s), ' +
+							assertCount + ' assertion(s)');
+						console.log('passed in ' + ((Date.now() - startTime) / 1000).toFixed(2) + ' secs.');
+					}
+				}
+				delete this.done;
 			}
-			delete this.done;
+		};
+		try {
+			var result = tests[t](tester);
+			result !== false && tester.done && tester.done();
 		}
-	};
-	try {
-		var result = tests[t](tester);
-		result !== false && tester.done && tester.done();
-	}
-	catch (e) {
-		tester.fail('exception: ' + e.message + '\n' + e.stack);
-		tester.done && tester.done();
-	}
-});
+		catch (e) {
+			tester.fail('exception: ' + e.message + '\n' + e.stack);
+			tester.done && tester.done();
+		}
+	});
+}
+
+main();
 
 // vim:set ts=4 sw=4 fenc=UTF-8 ff=unix ft=javascript fdm=marker fmr=<<<,>>> :

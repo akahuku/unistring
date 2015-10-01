@@ -1,0 +1,6 @@
+*.sw?
+*~
+Thumbs.db
+desktop.ini
+Session.vim
+node_modules
