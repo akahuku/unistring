@@ -85,6 +85,16 @@ function prepare (params, data) {
 
 	params.onDataCreate && (params.propData = params.onDataCreate(params.propData));
 	params.propData.sort(function (a, b) {return a[0] - b[0]});
+
+	for (var i = 0; i < params.propData.length - 1; i++) {
+		if (params.propData[i][1] + 1 == params.propData[i + 1][0]
+		&&  params.propData[i][2] == params.propData[i + 1][2]) {
+			params.propData[i][1] = params.propData[i + 1][1];
+			params.propData.splice(i + 1, 1);
+			i--;
+		}
+	}
+
 	makeJs(params);
 }
 
@@ -194,6 +204,10 @@ function main () {
 				path: __dirname + '/'
 			},
 			{
+				url: 'http://www.unicode.org/Public/#version#/ucd/Scripts.txt',
+				path: __dirname + '/'
+			},
+			{
 				url: 'http://www.unicode.org/Public/#version#/ucd/auxiliary/GraphemeBreakTest.txt',
 				path: __dirname + '/../test/'
 			},
@@ -209,7 +223,17 @@ function main () {
 		return;
 	}
 
-	if (args.g || args['grapheme-break-properties']) {
+	if (args.s || args['scripts']) {
+		params.srcFileName = __dirname + '/Scripts.txt';
+		params.propIndex = {
+			'Unknown': 0
+		};
+		params.tableName = 'SCRIPTS';
+		params.structLengthVarName = 'SCRIPTS_PROP_UNIT_LENGTH';
+		params.constPrefix = 'SCRIPT';
+	}
+
+	else if (args.g || args['grapheme-break-properties']) {
 		params.srcFileName = __dirname + '/GraphemeBreakProperty.txt';
 		params.propIndex = {
 			'Other': 0,
@@ -262,6 +286,7 @@ function main () {
 			'options:',
 			'  -u --unicode-version=<version>',
 			'  -l --load-files',
+			'  -s --scripts',
 			'  -g --grapheme-break-properties',
 			'  -w --word-break-properties'
 		].join('\n'));
