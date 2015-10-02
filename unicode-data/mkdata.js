@@ -5,7 +5,13 @@
  *
  * format:
  *
- *   <lower code point (4 bytes, little endian)> <range count (2 bytes, little endian)> <property value (2 byte, little endian)>
+ *   +0       +1       +2       +3       +4
+ *   --------------------------------------------
+ *   11111111 00000000 00010000 11111111 11111111
+ *   ^^^^^^^^
+ *    value   ^^^^^^^^ ^^^
+ *            range length^^^^^ ^^^^^^^^ ^^^^^^^^
+ *                               codepoint
  *
  *   note: code point order must be sorted.
  */
@@ -110,6 +116,7 @@ function makeJs (params) {
 
 	var propData = params.propData;
 	var propIndex = params.propIndex;
+	var UNIT_SIZE = 5;
 
 	output(
 		'\t// GENERATED CODE START <<<1',
@@ -121,17 +128,42 @@ function makeJs (params) {
 	 * table
 	 */
 
-	var tmp = new Buffer(propData.length * 8);
+	for (var i = 0; i < propData.length; i++) {
+		if (propData[i][1] - propData[i][0] + 1 > 2047) {
+			propData.splice(i + 1, 0, [
+				propData[i][0] + 2047,
+				propData[i][1],
+				propData[i][2]
+			]);
+			propData[i][1] = propData[i][0] + 2047 - 1;
+		}
+	}
+	var tmp = new Buffer(propData.length * UNIT_SIZE);
 	var offset = 0;
 	for (var i = 0, goal = propData.length; i < goal; i++) {
-		tmp.writeUInt32LE(propData[i][0], offset);
+		if (propData[i][2] > 255) {
+			throw new Error(
+				'#' + i + ': property value too large: ' +
+				propData[i][2]);
+		}
+		if (propData[i][1] - propData[i][0] + 1 > 2047) {
+			throw new Error(
+				'#' + i + ': range too large: ' +
+				(propData[i][1] - propData[i][0] + 1));
+		}
+		if (propData[i][0] > 0x10ffff) {
+			throw new Error(
+				'#' + i + ': code point too large: ' +
+				propData[i][0].toString(16));
+		}
+		tmp.writeUInt8(propData[i][2], offset);
+		offset += 1;
+
+		tmp.writeUInt32LE(
+			((propData[i][1] - propData[i][0] + 1) * 0x200000)
+			+ (propData[i][0]),
+			offset);
 		offset += 4;
-
-		tmp.writeUInt16LE(propData[i][1] - propData[i][0] + 1, offset);
-		offset += 2;
-
-		tmp.writeUInt16LE(propData[i][2], offset);
-		offset += 2;
 	}
 
 	tmp = tmp.toString('hex').toUpperCase().replace(/.{80}/g, '$&\\\n');
@@ -156,7 +188,7 @@ function makeJs (params) {
 	 */
 
 	output(
-		'\tvar ' + params.structLengthVarName + ' = 8;',
+		'\tvar ' + params.structLengthVarName + ' = ' + UNIT_SIZE + ';',
 		''
 	);
 

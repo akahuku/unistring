@@ -12,7 +12,7 @@ var tests = {
 				if (!re) return;
 
 				var codePoint = parseInt(re[1], 16);
-				var codePointString = 'U+' + ('000000' + re[1]).substr(-6);
+				var codePointString = Unistring.getCodePointString(codePoint, 'unicode');
 				var code = Unistring.getGBPCodeFromName(re[2]);
 				if (code == undefined) {
 					test.fail(
@@ -22,7 +22,7 @@ var tests = {
 					return;
 				}
 
-				var result = Unistring.findGraphemeBreakProp(codePoint);
+				var result = Unistring.getGraphemeBreakProp(codePoint);
 				test.eq('line ' + (lineIndex + 1) + ': ' + re[1], code, result);
 			},
 			function () {
@@ -253,11 +253,7 @@ var tests = {
 				Unistring.getWords(testString).forEach(function (word) {
 					var tmp = [];
 					Unistring(word.text).forEach(function (cluster) {
-						tmp.push.apply(tmp, cluster.codePoints.map(function (cp) {
-							return cp >= 0x10000 ?
-								cp.toString(16).toUpperCase() :
-								('0000' + cp.toString(16).toUpperCase()).substr(-4);
-						}));
+						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
 					});
 					result.push(tmp.join(' × '));
 				});

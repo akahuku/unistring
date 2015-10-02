@@ -130,6 +130,7 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ### Class Methods
 
 * `getUTF16FromCodePoint(codePoint): string`
+* `getCodePointString(codePoint, type): string`
 * `getGBPCodeFromName(name): number`
 * `getWBPCodeFromName(name): number`
 * `getWords(str): object[]`
