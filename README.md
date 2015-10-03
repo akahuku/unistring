@@ -101,11 +101,11 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 
 ## Reference
 
-### Properties
+### Instance properties
 
 * `length: number`
 
-### Methods
+### Instance methods
 
 * `clone(): Unistring`
 * `dump(): string`
@@ -127,8 +127,12 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `indexOf(str): number`
 * `lastIndexOf(str): number`
 
-### Class Methods
+### Class methods
 
+* `getCodePointArray(str): number[]`
+* `getGraphemeBreakProp(codePoint): number`
+* `getWordBreakProp(codePoint): number`
+* `getScriptProp(codePoint): number`
 * `getUTF16FromCodePoint(codePoint): string`
 * `getCodePointString(codePoint, type): string`
 * `getGBPCodeFromName(name): number`

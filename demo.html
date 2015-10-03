@@ -27,8 +27,13 @@
 			<input id="i1" placeholder="enter any text here and hit enter key...">
 		</div>
 		<div>
-			<label><input type="radio" name="dumptype" value="1" checked="checked"> Dump grapheme cluster info</label>
-			<label><input type="radio" name="dumptype" value="2"> Dump word boundary info</label>
+			<div>
+				<label><input type="radio" name="dumptype" value="1" checked="checked"> Dump grapheme cluster info</label>
+			</div>
+			<div>
+				<label><input type="radio" name="dumptype" value="2"> Dump word boundary info</label>
+				<label><input id="useScript" type="checkbox"> Combine adjacent characters belongs to the same script</label>
+			</div>
 		<div id="d1"></div>
 		<script type="text/javascript">
 document.getElementById('i1').addEventListener('keypress', function (e) {
@@ -43,12 +48,14 @@ document.getElementById('i1').addEventListener('keypress', function (e) {
 			return Unistring.getCodePointString(a.charCodeAt(0));
 		}).join(' ');
 
+		var dump = '';
 		switch (document.querySelector('[name="dumptype"]:checked').value - 0) {
 		case 1:
-			var dump = Unistring(value).dump(true);
+			dump = Unistring(value).dump(true);
 			break;
 		case 2:
-			var dump = JSON.stringify(Unistring.getWords(value), null, ' ');;
+			var useScript = document.getElementById('useScript').checked;
+			dump = JSON.stringify(Unistring.getWords(value, useScript), null, ' ');;
 			break;
 		}
 
