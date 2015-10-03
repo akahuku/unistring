@@ -35,7 +35,7 @@ us.append('!');
 us.toString();   // returns "C'est délicieux!" as string
 
 // break into words by UAX#29 rule
-var words = Unistring.getWords('漢字カタカナひらがな1.23');
+var words = Unistring.getWords('漢字カタカナひらがな1.23', true);
 /*
  * words = [
  *  {
@@ -137,4 +137,4 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `getCodePointString(codePoint, type): string`
 * `getGBPCodeFromName(name): number`
 * `getWBPCodeFromName(name): number`
-* `getWords(str): object[]`
+* `getWords(str [,useScripts]): object[]`
