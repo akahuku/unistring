@@ -118,6 +118,7 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `rawStringAt(index): string`
 * `rawIndexAt(index): number`
 * `forEach(callback [,thisObj])`
+* `getCrusterIndexFromUTF16Index(index): number`
 * `charAt(index): string`
 * `charCodeAt(index): number`
 * `substring(start, end): Unistring`

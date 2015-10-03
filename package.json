@@ -1,6 +1,6 @@
 {
 	"name": "unistring",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"description": "javascript library to handle 'unicode string' easily and correctly",
 	"main": "unistring.js",
 	"author": "akahuku@gmail.com",

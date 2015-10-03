@@ -126,6 +126,19 @@ var tests = {
 		});
 		test.eq('#1-1', 'かきくけこ', result);
 	},
+	testGetCrusterIndexFromUTF16Index: function (test) {
+		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		test.eq('#1-1', 0, s.getCrusterIndexFromUTF16Index(0));
+		test.eq('#1-2', 0, s.getCrusterIndexFromUTF16Index(1));
+		test.eq('#1-3', 1, s.getCrusterIndexFromUTF16Index(2));
+		test.eq('#1-4', 1, s.getCrusterIndexFromUTF16Index(3));
+		test.eq('#1-5', 2, s.getCrusterIndexFromUTF16Index(4));
+		test.eq('#1-6', 2, s.getCrusterIndexFromUTF16Index(5));
+		test.eq('#1-7', 3, s.getCrusterIndexFromUTF16Index(6));
+		test.eq('#1-8', 3, s.getCrusterIndexFromUTF16Index(7));
+		test.eq('#1-9', 4, s.getCrusterIndexFromUTF16Index(8));
+		test.eq('#1-10', 4, s.getCrusterIndexFromUTF16Index(9));
+	},
 	testLength: function (test) {
 		var s = new Unistring(
 			// ZALGO!

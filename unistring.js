@@ -1401,6 +1401,29 @@
 		forEach: function () {
 			this.clusters.forEach.apply(this.clusters, arguments);
 		},
+		getCrusterIndexFromUTF16Index: function (index) {
+			var left = 0, right = this.clusters.length;
+			var middle, rawIndex, length;
+
+			while (left <= right) {
+				middle = ((left + right) / 2) >> 0;
+
+				rawIndex = this.clusters[middle].rawIndex;
+				length = this.clusters[middle].rawString.length;
+
+				if (rawIndex + length - 1 < index) {
+					left = middle + 1;
+				}
+				else if (index < rawIndex) {
+					right = middle - 1;
+				}
+				else {
+					return middle;
+				}
+			}
+
+			return -1;
+		},
 
 		/*
 		 * string like properties and methods
