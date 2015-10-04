@@ -1395,13 +1395,17 @@
 		},
 		rawIndexAt: function (index) {
 			index = this._ensureIndex(index);
-			if (index < 0 || index >= this.clusters.length) return NaN;
+			if (index < 0 || index > this.clusters.length) return NaN;
+			if (index == this.clusters.length) {
+				return this.clusters[index - 1].rawIndex +
+					this.clusters[index - 1].rawString.length;
+			}
 			return this.clusters[index].rawIndex;
 		},
 		forEach: function () {
 			this.clusters.forEach.apply(this.clusters, arguments);
 		},
-		getCrusterIndexFromUTF16Index: function (index) {
+		getClusterIndexFromUTF16Index: function (index) {
 			var left = 0, right = this.clusters.length;
 			var middle, rawIndex, length;
 

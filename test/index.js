@@ -117,6 +117,16 @@ var tests = {
 		test.eq('#1-3', 'く\u3099', s.rawStringAt(2));
 		test.eq('#1-4', 'け\u3099', s.rawStringAt(3));
 		test.eq('#1-5', 'こ\u3099', s.rawStringAt(4));
+		test.eq('#1-6', '',         s.rawStringAt(5));
+	},
+	testRawIndexAt: function (test) {
+		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		test.eq('#1-1', 0, s.rawIndexAt(0));
+		test.eq('#1-2', 2, s.rawIndexAt(1));
+		test.eq('#1-3', 4, s.rawIndexAt(2));
+		test.eq('#1-4', 6, s.rawIndexAt(3));
+		test.eq('#1-5', 8, s.rawIndexAt(4));
+		test.eq('#1-6', 10, s.rawIndexAt(5));
 	},
 	testForEach: function (test) {
 		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
@@ -126,18 +136,18 @@ var tests = {
 		});
 		test.eq('#1-1', 'かきくけこ', result);
 	},
-	testGetCrusterIndexFromUTF16Index: function (test) {
+	testGetClusterIndexFromUTF16Index: function (test) {
 		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
-		test.eq('#1-1', 0, s.getCrusterIndexFromUTF16Index(0));
-		test.eq('#1-2', 0, s.getCrusterIndexFromUTF16Index(1));
-		test.eq('#1-3', 1, s.getCrusterIndexFromUTF16Index(2));
-		test.eq('#1-4', 1, s.getCrusterIndexFromUTF16Index(3));
-		test.eq('#1-5', 2, s.getCrusterIndexFromUTF16Index(4));
-		test.eq('#1-6', 2, s.getCrusterIndexFromUTF16Index(5));
-		test.eq('#1-7', 3, s.getCrusterIndexFromUTF16Index(6));
-		test.eq('#1-8', 3, s.getCrusterIndexFromUTF16Index(7));
-		test.eq('#1-9', 4, s.getCrusterIndexFromUTF16Index(8));
-		test.eq('#1-10', 4, s.getCrusterIndexFromUTF16Index(9));
+		test.eq('#1-1', 0, s.getClusterIndexFromUTF16Index(0));
+		test.eq('#1-2', 0, s.getClusterIndexFromUTF16Index(1));
+		test.eq('#1-3', 1, s.getClusterIndexFromUTF16Index(2));
+		test.eq('#1-4', 1, s.getClusterIndexFromUTF16Index(3));
+		test.eq('#1-5', 2, s.getClusterIndexFromUTF16Index(4));
+		test.eq('#1-6', 2, s.getClusterIndexFromUTF16Index(5));
+		test.eq('#1-7', 3, s.getClusterIndexFromUTF16Index(6));
+		test.eq('#1-8', 3, s.getClusterIndexFromUTF16Index(7));
+		test.eq('#1-9', 4, s.getClusterIndexFromUTF16Index(8));
+		test.eq('#1-10', 4, s.getClusterIndexFromUTF16Index(9));
 	},
 	testLength: function (test) {
 		var s = new Unistring(
