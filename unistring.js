@@ -195,25 +195,23 @@
 
 	var GRAPHEME_BREAK_PROP_UNIT_LENGTH = 5;
 
-	function getGBPCodeFromName (name) {
-		switch (name) {
-		case 'Other': return GBP_Other;
-		case 'SOT': return GBP_SOT;
-		case 'EOT': return GBP_EOT;
-		case 'CR': return GBP_CR;
-		case 'LF': return GBP_LF;
-		case 'Control': return GBP_Control;
-		case 'Extend': return GBP_Extend;
-		case 'Regional_Indicator': return GBP_Regional_Indicator;
-		case 'SpacingMark': return GBP_SpacingMark;
-		case 'L': return GBP_L;
-		case 'V': return GBP_V;
-		case 'T': return GBP_T;
-		case 'LV': return GBP_LV;
-		case 'LVT': return GBP_LVT;
-		}
-		return undefined;
-	}
+	var GBP = {
+		'Other': 0,
+		'SOT': 1,
+		'EOT': 2,
+		'CR': 3,
+		'LF': 4,
+		'Control': 5,
+		'Extend': 6,
+		'Regional_Indicator': 7,
+		'SpacingMark': 8,
+		'L': 9,
+		'V': 10,
+		'T': 11,
+		'LV': 12,
+		'LVT': 13
+	};
+
 	// GENERATED CODE END
 	// >>>
 
@@ -362,33 +360,31 @@
 
 	var WORD_BREAK_PROP_UNIT_LENGTH = 5;
 
-	function getWBPCodeFromName (name) {
-		switch (name) {
-		case 'Other': return WBP_Other;
-		case 'SOT': return WBP_SOT;
-		case 'EOT': return WBP_EOT;
-		case 'Double_Quote': return WBP_Double_Quote;
-		case 'Single_Quote': return WBP_Single_Quote;
-		case 'Hebrew_Letter': return WBP_Hebrew_Letter;
-		case 'CR': return WBP_CR;
-		case 'LF': return WBP_LF;
-		case 'Newline': return WBP_Newline;
-		case 'Extend': return WBP_Extend;
-		case 'Regional_Indicator': return WBP_Regional_Indicator;
-		case 'Format': return WBP_Format;
-		case 'ALetter': return WBP_ALetter;
-		case 'MidLetter': return WBP_MidLetter;
-		case 'MidNum': return WBP_MidNum;
-		case 'MidNumLet': return WBP_MidNumLet;
-		case 'Numeric': return WBP_Numeric;
-		case 'ExtendNumLet': return WBP_ExtendNumLet;
-		case 'Katakana': return WBP_Katakana;
-		case 'Hiragana': return WBP_Hiragana;
-		case 'KanaExtension': return WBP_KanaExtension;
-		case 'Space': return WBP_Space;
-		}
-		return undefined;
-	}
+	var WBP = {
+		'Other': 0,
+		'SOT': 1,
+		'EOT': 2,
+		'Double_Quote': 3,
+		'Single_Quote': 4,
+		'Hebrew_Letter': 5,
+		'CR': 6,
+		'LF': 7,
+		'Newline': 8,
+		'Extend': 9,
+		'Regional_Indicator': 10,
+		'Format': 11,
+		'ALetter': 12,
+		'MidLetter': 13,
+		'MidNum': 14,
+		'MidNumLet': 15,
+		'Numeric': 16,
+		'ExtendNumLet': 17,
+		'Katakana': 18,
+		'Hiragana': 19,
+		'KanaExtension': 20,
+		'Space': 21
+	};
+
 	// GENERATED CODE END
 	// >>>
 
@@ -647,143 +643,141 @@
 
 	var SCRIPTS_PROP_UNIT_LENGTH = 5;
 
-	function getSCRIPTCodeFromName (name) {
-		switch (name) {
-		case 'Unknown': return SCRIPT_Unknown;
-		case 'Common': return SCRIPT_Common;
-		case 'Latin': return SCRIPT_Latin;
-		case 'Greek': return SCRIPT_Greek;
-		case 'Cyrillic': return SCRIPT_Cyrillic;
-		case 'Armenian': return SCRIPT_Armenian;
-		case 'Hebrew': return SCRIPT_Hebrew;
-		case 'Arabic': return SCRIPT_Arabic;
-		case 'Syriac': return SCRIPT_Syriac;
-		case 'Thaana': return SCRIPT_Thaana;
-		case 'Devanagari': return SCRIPT_Devanagari;
-		case 'Bengali': return SCRIPT_Bengali;
-		case 'Gurmukhi': return SCRIPT_Gurmukhi;
-		case 'Gujarati': return SCRIPT_Gujarati;
-		case 'Oriya': return SCRIPT_Oriya;
-		case 'Tamil': return SCRIPT_Tamil;
-		case 'Telugu': return SCRIPT_Telugu;
-		case 'Kannada': return SCRIPT_Kannada;
-		case 'Malayalam': return SCRIPT_Malayalam;
-		case 'Sinhala': return SCRIPT_Sinhala;
-		case 'Thai': return SCRIPT_Thai;
-		case 'Lao': return SCRIPT_Lao;
-		case 'Tibetan': return SCRIPT_Tibetan;
-		case 'Myanmar': return SCRIPT_Myanmar;
-		case 'Georgian': return SCRIPT_Georgian;
-		case 'Hangul': return SCRIPT_Hangul;
-		case 'Ethiopic': return SCRIPT_Ethiopic;
-		case 'Cherokee': return SCRIPT_Cherokee;
-		case 'Canadian_Aboriginal': return SCRIPT_Canadian_Aboriginal;
-		case 'Ogham': return SCRIPT_Ogham;
-		case 'Runic': return SCRIPT_Runic;
-		case 'Khmer': return SCRIPT_Khmer;
-		case 'Mongolian': return SCRIPT_Mongolian;
-		case 'Hiragana': return SCRIPT_Hiragana;
-		case 'Katakana': return SCRIPT_Katakana;
-		case 'Bopomofo': return SCRIPT_Bopomofo;
-		case 'Han': return SCRIPT_Han;
-		case 'Yi': return SCRIPT_Yi;
-		case 'Old_Italic': return SCRIPT_Old_Italic;
-		case 'Gothic': return SCRIPT_Gothic;
-		case 'Deseret': return SCRIPT_Deseret;
-		case 'Inherited': return SCRIPT_Inherited;
-		case 'Tagalog': return SCRIPT_Tagalog;
-		case 'Hanunoo': return SCRIPT_Hanunoo;
-		case 'Buhid': return SCRIPT_Buhid;
-		case 'Tagbanwa': return SCRIPT_Tagbanwa;
-		case 'Limbu': return SCRIPT_Limbu;
-		case 'Tai_Le': return SCRIPT_Tai_Le;
-		case 'Linear_B': return SCRIPT_Linear_B;
-		case 'Ugaritic': return SCRIPT_Ugaritic;
-		case 'Shavian': return SCRIPT_Shavian;
-		case 'Osmanya': return SCRIPT_Osmanya;
-		case 'Cypriot': return SCRIPT_Cypriot;
-		case 'Braille': return SCRIPT_Braille;
-		case 'Buginese': return SCRIPT_Buginese;
-		case 'Coptic': return SCRIPT_Coptic;
-		case 'New_Tai_Lue': return SCRIPT_New_Tai_Lue;
-		case 'Glagolitic': return SCRIPT_Glagolitic;
-		case 'Tifinagh': return SCRIPT_Tifinagh;
-		case 'Syloti_Nagri': return SCRIPT_Syloti_Nagri;
-		case 'Old_Persian': return SCRIPT_Old_Persian;
-		case 'Kharoshthi': return SCRIPT_Kharoshthi;
-		case 'Balinese': return SCRIPT_Balinese;
-		case 'Cuneiform': return SCRIPT_Cuneiform;
-		case 'Phoenician': return SCRIPT_Phoenician;
-		case 'Phags_Pa': return SCRIPT_Phags_Pa;
-		case 'Nko': return SCRIPT_Nko;
-		case 'Sundanese': return SCRIPT_Sundanese;
-		case 'Lepcha': return SCRIPT_Lepcha;
-		case 'Ol_Chiki': return SCRIPT_Ol_Chiki;
-		case 'Vai': return SCRIPT_Vai;
-		case 'Saurashtra': return SCRIPT_Saurashtra;
-		case 'Kayah_Li': return SCRIPT_Kayah_Li;
-		case 'Rejang': return SCRIPT_Rejang;
-		case 'Lycian': return SCRIPT_Lycian;
-		case 'Carian': return SCRIPT_Carian;
-		case 'Lydian': return SCRIPT_Lydian;
-		case 'Cham': return SCRIPT_Cham;
-		case 'Tai_Tham': return SCRIPT_Tai_Tham;
-		case 'Tai_Viet': return SCRIPT_Tai_Viet;
-		case 'Avestan': return SCRIPT_Avestan;
-		case 'Egyptian_Hieroglyphs': return SCRIPT_Egyptian_Hieroglyphs;
-		case 'Samaritan': return SCRIPT_Samaritan;
-		case 'Lisu': return SCRIPT_Lisu;
-		case 'Bamum': return SCRIPT_Bamum;
-		case 'Javanese': return SCRIPT_Javanese;
-		case 'Meetei_Mayek': return SCRIPT_Meetei_Mayek;
-		case 'Imperial_Aramaic': return SCRIPT_Imperial_Aramaic;
-		case 'Old_South_Arabian': return SCRIPT_Old_South_Arabian;
-		case 'Inscriptional_Parthian': return SCRIPT_Inscriptional_Parthian;
-		case 'Inscriptional_Pahlavi': return SCRIPT_Inscriptional_Pahlavi;
-		case 'Old_Turkic': return SCRIPT_Old_Turkic;
-		case 'Kaithi': return SCRIPT_Kaithi;
-		case 'Batak': return SCRIPT_Batak;
-		case 'Brahmi': return SCRIPT_Brahmi;
-		case 'Mandaic': return SCRIPT_Mandaic;
-		case 'Chakma': return SCRIPT_Chakma;
-		case 'Meroitic_Cursive': return SCRIPT_Meroitic_Cursive;
-		case 'Meroitic_Hieroglyphs': return SCRIPT_Meroitic_Hieroglyphs;
-		case 'Miao': return SCRIPT_Miao;
-		case 'Sharada': return SCRIPT_Sharada;
-		case 'Sora_Sompeng': return SCRIPT_Sora_Sompeng;
-		case 'Takri': return SCRIPT_Takri;
-		case 'Caucasian_Albanian': return SCRIPT_Caucasian_Albanian;
-		case 'Bassa_Vah': return SCRIPT_Bassa_Vah;
-		case 'Duployan': return SCRIPT_Duployan;
-		case 'Elbasan': return SCRIPT_Elbasan;
-		case 'Grantha': return SCRIPT_Grantha;
-		case 'Pahawh_Hmong': return SCRIPT_Pahawh_Hmong;
-		case 'Khojki': return SCRIPT_Khojki;
-		case 'Linear_A': return SCRIPT_Linear_A;
-		case 'Mahajani': return SCRIPT_Mahajani;
-		case 'Manichaean': return SCRIPT_Manichaean;
-		case 'Mende_Kikakui': return SCRIPT_Mende_Kikakui;
-		case 'Modi': return SCRIPT_Modi;
-		case 'Mro': return SCRIPT_Mro;
-		case 'Old_North_Arabian': return SCRIPT_Old_North_Arabian;
-		case 'Nabataean': return SCRIPT_Nabataean;
-		case 'Palmyrene': return SCRIPT_Palmyrene;
-		case 'Pau_Cin_Hau': return SCRIPT_Pau_Cin_Hau;
-		case 'Old_Permic': return SCRIPT_Old_Permic;
-		case 'Psalter_Pahlavi': return SCRIPT_Psalter_Pahlavi;
-		case 'Siddham': return SCRIPT_Siddham;
-		case 'Khudawadi': return SCRIPT_Khudawadi;
-		case 'Tirhuta': return SCRIPT_Tirhuta;
-		case 'Warang_Citi': return SCRIPT_Warang_Citi;
-		case 'Ahom': return SCRIPT_Ahom;
-		case 'Anatolian_Hieroglyphs': return SCRIPT_Anatolian_Hieroglyphs;
-		case 'Hatran': return SCRIPT_Hatran;
-		case 'Multani': return SCRIPT_Multani;
-		case 'Old_Hungarian': return SCRIPT_Old_Hungarian;
-		case 'SignWriting': return SCRIPT_SignWriting;
-		}
-		return undefined;
-	}
+	var SCRIPT = {
+		'Unknown': 0,
+		'Common': 1,
+		'Latin': 2,
+		'Greek': 3,
+		'Cyrillic': 4,
+		'Armenian': 5,
+		'Hebrew': 6,
+		'Arabic': 7,
+		'Syriac': 8,
+		'Thaana': 9,
+		'Devanagari': 10,
+		'Bengali': 11,
+		'Gurmukhi': 12,
+		'Gujarati': 13,
+		'Oriya': 14,
+		'Tamil': 15,
+		'Telugu': 16,
+		'Kannada': 17,
+		'Malayalam': 18,
+		'Sinhala': 19,
+		'Thai': 20,
+		'Lao': 21,
+		'Tibetan': 22,
+		'Myanmar': 23,
+		'Georgian': 24,
+		'Hangul': 25,
+		'Ethiopic': 26,
+		'Cherokee': 27,
+		'Canadian_Aboriginal': 28,
+		'Ogham': 29,
+		'Runic': 30,
+		'Khmer': 31,
+		'Mongolian': 32,
+		'Hiragana': 33,
+		'Katakana': 34,
+		'Bopomofo': 35,
+		'Han': 36,
+		'Yi': 37,
+		'Old_Italic': 38,
+		'Gothic': 39,
+		'Deseret': 40,
+		'Inherited': 41,
+		'Tagalog': 42,
+		'Hanunoo': 43,
+		'Buhid': 44,
+		'Tagbanwa': 45,
+		'Limbu': 46,
+		'Tai_Le': 47,
+		'Linear_B': 48,
+		'Ugaritic': 49,
+		'Shavian': 50,
+		'Osmanya': 51,
+		'Cypriot': 52,
+		'Braille': 53,
+		'Buginese': 54,
+		'Coptic': 55,
+		'New_Tai_Lue': 56,
+		'Glagolitic': 57,
+		'Tifinagh': 58,
+		'Syloti_Nagri': 59,
+		'Old_Persian': 60,
+		'Kharoshthi': 61,
+		'Balinese': 62,
+		'Cuneiform': 63,
+		'Phoenician': 64,
+		'Phags_Pa': 65,
+		'Nko': 66,
+		'Sundanese': 67,
+		'Lepcha': 68,
+		'Ol_Chiki': 69,
+		'Vai': 70,
+		'Saurashtra': 71,
+		'Kayah_Li': 72,
+		'Rejang': 73,
+		'Lycian': 74,
+		'Carian': 75,
+		'Lydian': 76,
+		'Cham': 77,
+		'Tai_Tham': 78,
+		'Tai_Viet': 79,
+		'Avestan': 80,
+		'Egyptian_Hieroglyphs': 81,
+		'Samaritan': 82,
+		'Lisu': 83,
+		'Bamum': 84,
+		'Javanese': 85,
+		'Meetei_Mayek': 86,
+		'Imperial_Aramaic': 87,
+		'Old_South_Arabian': 88,
+		'Inscriptional_Parthian': 89,
+		'Inscriptional_Pahlavi': 90,
+		'Old_Turkic': 91,
+		'Kaithi': 92,
+		'Batak': 93,
+		'Brahmi': 94,
+		'Mandaic': 95,
+		'Chakma': 96,
+		'Meroitic_Cursive': 97,
+		'Meroitic_Hieroglyphs': 98,
+		'Miao': 99,
+		'Sharada': 100,
+		'Sora_Sompeng': 101,
+		'Takri': 102,
+		'Caucasian_Albanian': 103,
+		'Bassa_Vah': 104,
+		'Duployan': 105,
+		'Elbasan': 106,
+		'Grantha': 107,
+		'Pahawh_Hmong': 108,
+		'Khojki': 109,
+		'Linear_A': 110,
+		'Mahajani': 111,
+		'Manichaean': 112,
+		'Mende_Kikakui': 113,
+		'Modi': 114,
+		'Mro': 115,
+		'Old_North_Arabian': 116,
+		'Nabataean': 117,
+		'Palmyrene': 118,
+		'Pau_Cin_Hau': 119,
+		'Old_Permic': 120,
+		'Psalter_Pahlavi': 121,
+		'Siddham': 122,
+		'Khudawadi': 123,
+		'Tirhuta': 124,
+		'Warang_Citi': 125,
+		'Ahom': 126,
+		'Anatolian_Hieroglyphs': 127,
+		'Hatran': 128,
+		'Multani': 129,
+		'Old_Hungarian': 130,
+		'SignWriting': 131
+	};
+
 	// GENERATED CODE END
 	// >>>
 
@@ -1572,9 +1566,10 @@
 	Unistring.getScriptProp = scriptFinder;
 	Unistring.getUTF16FromCodePoint = getUTF16FromCodePoint;
 	Unistring.getCodePointString = getCodePointString;
-	Unistring.getGBPCodeFromName = getGBPCodeFromName;
-	Unistring.getWBPCodeFromName = getWBPCodeFromName;
 	Unistring.getWords = getWords;
+	Unistring.GBP = GBP;
+	Unistring.WBP = WBP;
+	Unistring.SCRIPT = SCRIPT;
 
 	if (typeof module !== 'undefined' && typeof exports !== 'undefined') {
 		module.exports = Unistring;

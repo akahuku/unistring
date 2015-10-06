@@ -13,7 +13,7 @@ var tests = {
 
 				var codePoint = parseInt(re[1], 16);
 				var codePointString = Unistring.getCodePointString(codePoint, 'unicode');
-				var code = Unistring.getGBPCodeFromName(re[2]);
+				var code = Unistring.GBP[re[2]];
 				if (code == undefined) {
 					test.fail(
 						codePointString + ' failed:' +

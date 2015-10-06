@@ -197,17 +197,12 @@ function makeJs (params) {
 	 */
 
 	output(
-		'\tfunction get' + params.constPrefix + 'CodeFromName (name) {',
-		'\t\tswitch (name) {'
-	);
-	for (var key in propIndex) {
-		output('\t\tcase \'' + key + '\': return ' + params.constPrefix + '_' + key + ';');
-	}
-	output(
-		'\t\t}',
-		'\t\treturn undefined;',
-		'\t}'
-	);
+		'\tvar ' + params.constPrefix + ' = ' +
+		JSON.stringify(propIndex, null, '\t')
+			.split('\n')
+			.map(function (a, i) {return i ? '\t' + a.replace(/"/g, "'") : a})
+			.join('\n') + ';',
+		'');
 
 	output(
 		'\t// GENERATED CODE END',
