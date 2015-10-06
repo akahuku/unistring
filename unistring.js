@@ -993,6 +993,30 @@
 		return result;
 	}
 
+	function wordIndexOf (index) {
+		var left = 0, right = this.length - 1;
+		var middle, rawIndex, length;
+
+		while (left <= right) {
+			middle = ((left + right) / 2) >> 0;
+
+			rawIndex = this[middle].index;
+			length = this[middle].length;
+
+			if (rawIndex + length - 1 < index) {
+				left = middle + 1;
+			}
+			else if (index < rawIndex) {
+				right = middle - 1;
+			}
+			else {
+				return middle;
+			}
+		}
+
+		return -1;
+	}
+
 	function getWords (s, useScripts) {
 		var buf = [
 			[WBP_SOT, undefined, undefined],
@@ -1051,11 +1075,14 @@
 				result.push({
 					text: s.substring(prevIndex, index),
 					index: prevIndex,
-					length: index - prevIndex
+					length: index - prevIndex,
+					type: buf[i - 1][0]
 				});
 				prevIndex = index;
 			}
 		}
+
+		result.wordIndexOf = wordIndexOf;
 
 		return result;
 	}
@@ -1395,7 +1422,7 @@
 		},
 		rawIndexAt: function (index) {
 			index = this._ensureIndex(index);
-			if (index < 0 || index > this.clusters.length) return NaN;
+			if (index < 0 || this.clusters.length == 0 || index > this.clusters.length) return NaN;
 			if (index == this.clusters.length) {
 				return this.clusters[index - 1].rawIndex +
 					this.clusters[index - 1].rawString.length;
@@ -1406,7 +1433,7 @@
 			this.clusters.forEach.apply(this.clusters, arguments);
 		},
 		getClusterIndexFromUTF16Index: function (index) {
-			var left = 0, right = this.clusters.length;
+			var left = 0, right = this.clusters.length - 1;
 			var middle, rawIndex, length;
 
 			while (left <= right) {
