@@ -289,6 +289,30 @@ var tests = {
 			}
 		);
 		return false;
+	},
+	testToLowerCase: function (test) {
+		var s1 = new Unistring('ABC あいうえお');
+		var s2 = s1.toLowerCase();
+
+		test.eq('#1-1', 'ABC あいうえお', s1.toString());
+		test.eq('#1-2', 'abc あいうえお', s2.toString());
+
+		var s3 = s1.toLowerCase(true);
+
+		test.eq('#2-1', 'ABC あいうえお', s1.toString());
+		test.eq('#2-2', 'abc あいうえお', s3.toString());
+	},
+	testToUpperCase: function (test) {
+		var s1 = new Unistring('abc あいうえお');
+		var s2 = s1.toUpperCase();
+
+		test.eq('#1-1', 'abc あいうえお', s1.toString());
+		test.eq('#1-2', 'ABC あいうえお', s2.toString());
+
+		var s3 = s1.toUpperCase(true);
+
+		test.eq('#2-1', 'abc あいうえお', s1.toString());
+		test.eq('#2-2', 'ABC あいうえお', s3.toString());
 	}
 };
 

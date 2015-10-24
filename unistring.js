@@ -1557,6 +1557,16 @@
 			}
 
 			return -1;
+		},
+		toLowerCase: function (useLocale) {
+			var method = useLocale && 'toLocaleLowerCase' in String.prototype ?
+				'toLocaleLowerCase' : 'toLowerCase';
+			return new Unistring(this.toString()[method]());
+		},
+		toUpperCase: function (useLocale) {
+			var method = useLocale && 'toLocaleUpperCase' in String.prototype ?
+				'toLocaleUpperCase' : 'toUpperCase';
+			return new Unistring(this.toString()[method]());
 		}
 	};
 
