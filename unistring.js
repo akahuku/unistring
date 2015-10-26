@@ -1062,7 +1062,7 @@
 		for (var i = 2, goal = buf.length - 1; i < goal; i++) {
 			if (!canBreakWord(buf[i - 2][0], buf[i - 1][0],
 							  buf[i][0], buf[i + 1][0])) continue;
-			if (useScripts && isInScriptWord(buf[i - 1][1], buf[i][1])) continue;
+			if (useScripts && isInScriptWord(buf[i - 1], buf[i])) continue;
 
 			var index = buf[i][2];
 			if (prevIndex < index) {
@@ -1076,7 +1076,9 @@
 			}
 		}
 
-		result.wordIndexOf = wordIndexOf;
+		Object.defineProperty(result, 'wordIndexOf', {
+			value: wordIndexOf
+		});
 
 		return result;
 	}
@@ -1187,10 +1189,6 @@
 		if (p1 == WBP_KanaExtension
 		&&  (current == WBP_Katakana || current == WBP_Hiragana)) return false;
 
-		//[unistring extension]: Do not break between spaces
-		//  WB13-unistring-4: Space  ×  Space
-		if (p1 == WBP_Space && current == WBP_Space) return false;
-
 		//Do not break from extenders.
 		//  WB13a: (AHLetter | Numeric | Katakana | Hiragana | ExtendNumLet)  ×  ExtendNumLet
 		//  [unistring extension]: added Hiragana and KanaExtension
@@ -1215,12 +1213,17 @@
 		return true;
 	}
 
-	function isInScriptWord (lcp, rcp) {
-		if (lcp == undefined || rcp == undefined) return false;
-		var l = scriptFinder(lcp);
-		var r = scriptFinder(rcp);
-		if (l == r && l == SCRIPT_Common) return false;
-		return l == r;
+	function isInScriptWord (left, right) {
+		//  Space  ×  Space
+		if (left[0] == WBP_Space && right[0] == WBP_Space) return true;
+		//  !Space  ÷   Space
+		if (left[0] != WBP_Space && right[0] == WBP_Space) return false;
+		//  Space  ÷  !Space
+		if (left[0] == WBP_Space && right[0] != WBP_Space) return false;
+
+		if (left[1] == undefined || right[1] == undefined) return false;
+
+		return scriptFinder(left[1]) == scriptFinder(right[1]);
 	}
 
 	/*

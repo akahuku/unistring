@@ -290,6 +290,50 @@ var tests = {
 		);
 		return false;
 	},
+	testGetWordsWithScript: function (test) {
+		var w = Unistring.getWords('!@#   #+.   &*_', true);
+		test.eq('#1-1', 5, w.length);
+
+		test.eq('#2-1', '!@#', w[0].text);
+		test.eq('#2-2', '   ', w[1].text);
+		test.eq('#2-3', '#+.', w[2].text);
+		test.eq('#2-4', '   ', w[3].text);
+		test.eq('#2-5', '&*_', w[4].text);
+
+		test.eq('#3-1', 0, w[0].index);
+		test.eq('#3-2', 3, w[1].index);
+		test.eq('#3-3', 6, w[2].index);
+		test.eq('#3-4', 9, w[3].index);
+		test.eq('#3-5', 12, w[4].index);
+
+		test.eq('#4-1', 3, w[0].length);
+		test.eq('#4-2', 3, w[1].length);
+		test.eq('#4-3', 3, w[2].length);
+		test.eq('#4-4', 3, w[3].length);
+		test.eq('#4-5', 3, w[4].length);
+
+		test.eq('#5-1', Unistring.WBP.Other, w[0].type);
+		test.eq('#5-2', Unistring.WBP.Space, w[1].type);
+		test.eq('#5-3', Unistring.WBP.MidNumLet, w[2].type);
+		test.eq('#5-4', Unistring.WBP.Space, w[3].type);
+		test.eq('#5-5', Unistring.WBP.ExtendNumLet, w[4].type);
+	},
+	testWordIndexOf: function (test) {
+		var w = Unistring.getWords('!@#   #+.   &*_', true);
+
+		test.eq('#1-1', 0, w.wordIndexOf(0));
+		test.eq('#1-2', 0, w.wordIndexOf(1));
+		test.eq('#1-3', 0, w.wordIndexOf(2));
+
+		test.eq('#2-1', 4, w.wordIndexOf(12));
+		test.eq('#2-2', 4, w.wordIndexOf(13));
+		test.eq('#2-3', 4, w.wordIndexOf(14));
+
+		test.eq('#3-1', -1, w.wordIndexOf(-1));
+		test.eq('#3-2', -1, w.wordIndexOf(15));
+		test.eq('#3-3', -1, w.wordIndexOf(-1000));
+		test.eq('#3-4', -1, w.wordIndexOf(1000));
+	},
 	testToLowerCase: function (test) {
 		var s1 = new Unistring('ABC あいうえお');
 		var s2 = s1.toLowerCase();
