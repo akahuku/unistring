@@ -16,6 +16,6 @@
 		"url": "https://github.com/akahuku/unistring.git"
 	},
 	"scripts": {
-		"test": "test/index.js"
+		"test": "node test/index.js"
 	}
 }

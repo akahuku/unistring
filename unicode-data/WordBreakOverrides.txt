@@ -31,6 +31,7 @@ FF70          ; KanaExtension # Lm       HALFWIDTH KATAKANA-HIRAGANA PROLONGED S
 # Space
 # ================================================
 
+0009          ; Space # Cc        CHARACTER TABULATION
 0020          ; Space # Zs        SPACE
 00A0          ; Space # Zs        NO-BREAK SPACE
 1680          ; Space # Zs        OGHAM SPACE MARK
