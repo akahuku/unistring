@@ -319,6 +319,16 @@ var tests = {
 		test.eq('#5-4', Unistring.WBP.Space, w[3].type);
 		test.eq('#5-5', Unistring.WBP.ExtendNumLet, w[4].type);
 	},
+	testGetWordsWithEastAsianScript: function (test) {
+		var w = Unistring.getWords('漢字かな交じりの文', true);
+		test.eq('#1-1', 5, w.length);
+
+		test.eq('#2-1', '漢字',   w[0].text);
+		test.eq('#2-2', 'かな',   w[1].text);
+		test.eq('#2-3', '交',     w[2].text);
+		test.eq('#2-4', 'じりの', w[3].text);
+		test.eq('#2-5', '文',     w[4].text);
+	},
 	testWordIndexOf: function (test) {
 		var w = Unistring.getWords('!@#   #+.   &*_', true);
 

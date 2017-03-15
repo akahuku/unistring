@@ -940,7 +940,7 @@
 
 			// check if it can be broke
 			if (!canBreakWord(propString, nextProp, nextNextProp)) continue;
-			if (useScripts && isInScriptWord(propString, nextProp)) continue;
+			if (useScripts && i > 0 && isInScriptWord(propString, nextProp, chars[i - 1], chars[i])) continue;
 
 			// store the word
 			if (prevIndex < i) {
@@ -1251,7 +1251,7 @@
 		return true;
 	}
 
-	function isInScriptWord (prev, next) {
+	function isInScriptWord (prev, next, prevcp, nextcp) {
 		prev = prev.substr(-1);
 
 		//  Space  ×  Space
@@ -1263,8 +1263,7 @@
 
 		if (/[ab]/.test(prev) || /[ab]/.test(next)) return false;
 
-		return scriptFinder(prev.charCodeAt(0) - 96) ==
-			   scriptFinder(next.charCodeAt(0) - 96);
+		return scriptFinder(prevcp) == scriptFinder(nextcp);
 	}
 
 	/*
