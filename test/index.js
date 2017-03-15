@@ -2,6 +2,7 @@
 
 var fs = require('fs');
 var Unistring = require('../unistring');
+var testRunner = require('./test');
 
 var tests = {
 	testFind: function (test) {
@@ -334,6 +335,47 @@ var tests = {
 		test.eq('#3-3', -1, w.wordIndexOf(-1000));
 		test.eq('#3-4', -1, w.wordIndexOf(1000));
 	},
+	testComplexWordBreaking: function (test) {
+		var w = Unistring.getWords(String.fromCodePoint(
+			0x0061, 0x1F1E6, 0x200D, 0x1F1E7, 0x1F1E8, 0x0062));
+
+		// expected result
+		var expected = [
+			{
+				text: String.fromCodePoint(0x0061),
+				index: 0,
+				length: 1,
+				type: 12 // WBP_ALetter
+			},
+			{
+				text: String.fromCodePoint(0x1f1e6, 0x200d, 0x1f1e7),
+				index: 1,
+				length: 3,
+				type: 10 // WBP_Regional_Indicator
+			},
+			{
+				text: String.fromCodePoint(0x1f1e8),
+				index: 4,
+				length: 1,
+				type: 10 // WBP_Regional_Indicator
+			},
+			{
+				text: String.fromCodePoint(0x0062),
+				index: 5,
+				length: 1,
+				type: 12 // WBP_ALetter
+			}
+		];
+
+		test.eq('#1', 4, w.length);
+
+		expected.forEach((item, index) => {
+			var count = 1;
+			for (var i in item) {
+				test.eq(`#${index+1}-${count++}`, item[i], w[index][i]);
+			}
+		});
+	},
 	testToLowerCase: function (test) {
 		var s1 = new Unistring('ABC あいうえお');
 		var s2 = s1.toLowerCase();
@@ -374,87 +416,6 @@ function readFileByLine (fileName, callback, callback2) {
 	});
 }
 
-
-function main () {
-	var availableTests = Object.keys(tests)
-		.filter(function(t){return /^test/.test(t)});
-	var testCount = 0;
-	var assertCount = 0;
-	var failedCount = 0;
-	var startTime = Date.now();
-	availableTests.forEach(function (t) {
-		var tester = {
-			testName: t,
-			assertCount: 0,
-			failed: 0,
-			log: [],
-			fail: function (label) {
-				this.failed++;
-				this.log.push(label);
-				return false;
-			},
-			eq: function (label, expected, actual) {
-				this.assertCount++;
-				if (expected != actual) {
-					this.failed++;
-					this.log.push(
-						'---- ' + label + ' ----',
-						'expected: ' + expected,
-						'  actual: ' + actual
-					);
-					return false;
-				}
-				return true;
-			},
-			t: function (label, condition) {
-				this.assertCount++;
-				if (!condition) {
-					this.failed++;
-					this.log.push(
-						'---- ' + label + ' ----'
-					);
-				}
-				return true;
-			},
-			done: function () {
-				assertCount += this.assertCount;
-				failedCount += this.failed;
-				if (this.failed) {
-					console.log('******** ' + this.testName + ' ********');
-					console.log('\t' + this.log.join('\n\t'));
-				}
-				testCount++;
-				if (testCount >= availableTests.length) {
-					if (failedCount) {
-						console.log(
-							'\n' +
-							availableTests.length + ' test(s), ' +
-							assertCount + ' assertion(s), ' +
-							failedCount + ' failed.');
-						process.exit(1);
-					}
-					else {
-						console.log(
-							'\n' +
-							availableTests.length + ' test(s), ' +
-							assertCount + ' assertion(s)');
-						console.log('passed in ' + ((Date.now() - startTime) / 1000).toFixed(2) + ' secs.');
-					}
-				}
-				delete this.done;
-			}
-		};
-		try {
-			var result = tests[t](tester);
-			result !== false && tester.done && tester.done();
-		}
-		catch (e) {
-			tester.fail('exception: ' + e.message + '\n' + e.stack);
-			tester.done && tester.done();
-		}
-	});
-}
-
-main();
+testRunner.run(tests);
 
 // vim:set ts=4 sw=4 fenc=UTF-8 ff=unix ft=javascript fdm=marker fmr=<<<,>>> :

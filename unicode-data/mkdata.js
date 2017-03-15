@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 /*
  * grapheme break property generator
  * =================================
@@ -212,7 +212,7 @@ function makeJs (params) {
 
 function main () {
 	var params = {
-		unicodeVersion: '8.0.0',
+		unicodeVersion: '9.0.0',
 		propData: []
 	};
 
