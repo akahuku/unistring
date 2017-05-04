@@ -322,3 +322,4 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `getGBPCodeFromName(name): number`
 * `getWBPCodeFromName(name): number`
 * `getWords(str [,useScripts]): object[]`
+* `getSentences(str): object[]`

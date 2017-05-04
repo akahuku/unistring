@@ -187,26 +187,26 @@
 	/[0-9A-F]{2}/g,
 	function($0){return String.fromCharCode(parseInt($0, 16))});
 
-	var /* a */GBP_Other = 0;
-	var /* b */GBP_SOT = 1;
-	var /* c */GBP_EOT = 2;
-	var /* d */GBP_Prepend = 3;
-	var /* e */GBP_CR = 4;
-	var /* f */GBP_LF = 5;
-	var /* g */GBP_Control = 6;
-	var /* h */GBP_Extend = 7;
-	var /* i */GBP_Regional_Indicator = 8;
-	var /* j */GBP_SpacingMark = 9;
-	var /* k */GBP_L = 10;
-	var /* l */GBP_V = 11;
-	var /* m */GBP_T = 12;
-	var /* n */GBP_LV = 13;
-	var /* o */GBP_LVT = 14;
-	var /* p */GBP_E_Base = 15;
-	var /* q */GBP_E_Modifier = 16;
-	var /* r */GBP_ZWJ = 17;
-	var /* s */GBP_Glue_After_Zwj = 18;
-	var /* t */GBP_E_Base_GAZ = 19;
+	var /* ` */GBP_Other = 0;
+	var /* a */GBP_SOT = 1;
+	var /* b */GBP_EOT = 2;
+	var /* c */GBP_Prepend = 3;
+	var /* d */GBP_CR = 4;
+	var /* e */GBP_LF = 5;
+	var /* f */GBP_Control = 6;
+	var /* g */GBP_Extend = 7;
+	var /* h */GBP_Regional_Indicator = 8;
+	var /* i */GBP_SpacingMark = 9;
+	var /* j */GBP_L = 10;
+	var /* k */GBP_V = 11;
+	var /* l */GBP_T = 12;
+	var /* m */GBP_LV = 13;
+	var /* n */GBP_LVT = 14;
+	var /* o */GBP_E_Base = 15;
+	var /* p */GBP_E_Modifier = 16;
+	var /* q */GBP_ZWJ = 17;
+	var /* r */GBP_Glue_After_Zwj = 18;
+	var /* s */GBP_E_Base_GAZ = 19;
 
 	var GRAPHEME_BREAK_PROP_UNIT_LENGTH = 5;
 
@@ -1227,16 +1227,18 @@
 		return result;
 	}
 
-	function buildGraphemeClusters (chars) {
+	function buildGraphemeClusters (codePoints) {
+		const CODE_OFFSET = 96;
+
 		var result = [];
 		var propString = '';
 		var prevIndex = 0;
 		var rawIndex = 0;
-		for (var i = 0, goal = chars.length; i < goal; i++) {
-			var nextProp = String.fromCharCode(97 + graphemeFinder(chars[i]));
+		for (var i = 0, goal = codePoints.length; i < goal; i++) {
+			var nextProp = String.fromCharCode(CODE_OFFSET + graphemeFinder(codePoints[i]));
 			if (canBreak(propString, nextProp)) {
 				if (prevIndex < i) {
-					var grapheme = new Grapheme(chars.slice(prevIndex, i), rawIndex);
+					var grapheme = new Grapheme(codePoints.slice(prevIndex, i), rawIndex);
 					result.push(grapheme);
 					rawIndex += grapheme.rawString.length;
 				}
@@ -1245,10 +1247,10 @@
 			propString += nextProp;
 		}
 
-		if (canBreak(propString, String.fromCharCode(97 + GBP_EOT))) {
+		if (canBreak(propString, String.fromCharCode(CODE_OFFSET + GBP_EOT))) {
 			if (prevIndex < i) {
 				result.push(
-					new Grapheme(chars.slice(prevIndex, i), rawIndex)
+					new Grapheme(codePoints.slice(prevIndex, i), rawIndex)
 				);
 			}
 		}
@@ -1256,37 +1258,30 @@
 		return result;
 	}
 
-	function buildWordClusters (chars, useScripts) {
+	function buildWordClusters (codePoints, useScripts) {
+		const CODE_OFFSET = 96;
+
 		var result = [];
-		var propString = '';
 		var prevIndex = 0;
-		var rawIndex = 0;
-		var nextProp, nextNextProp;
+		var prevProps = '';
+		var nextProps = codePoints.map(function (cp) {
+			return String.fromCharCode(CODE_OFFSET + wordFinder(cp));
+		}).join('') + String.fromCharCode(CODE_OFFSET + WBP_EOT);
 
-		for (var i = 0, goal = chars.length; i <= goal; i++, propString += nextProp) {
-			// next word break property
-			nextProp = String.fromCharCode(
-				96 + (i >= goal ? WBP_EOT : wordFinder(chars[i])));
+		for (
+			var i = 0, goal = nextProps.length;
+			i < goal;
+			i++, prevProps += nextProps.charAt(0), nextProps = nextProps.substring(1)
+		) {
+			if (!canBreakWord(prevProps, nextProps)) continue;
+			if (useScripts && i > 0 && isInScriptWord(prevProps, nextProps, codePoints[i - 1], codePoints[i])) continue;
 
-			// next next word break property but skip Extend, Format and ZWJ
-			var j = i + 1;
-			do {
-				nextNextProp = String.fromCharCode(
-					96 + (j >= goal ? WBP_EOT : wordFinder(chars[j])));
-				j++;
-			} while (/[ikt]/.test(nextNextProp));
-
-			// check if it can be broke
-			if (!canBreakWord(propString, nextProp, nextNextProp)) continue;
-			if (useScripts && i > 0 && isInScriptWord(propString, nextProp, chars[i - 1], chars[i])) continue;
-
-			// store the word
 			if (prevIndex < i) {
 				result.push({
-					text: chars.slice(prevIndex, i).map(getUTF16FromCodePoint).join(''),
+					text: codePoints.slice(prevIndex, i).map(getUTF16FromCodePoint).join(''),
 					index: prevIndex,
 					length: i - prevIndex,
-					type: propString.substr(-1).charCodeAt(0) - 96
+					type: prevProps.substr(-1).charCodeAt(0) - CODE_OFFSET
 				});
 			}
 
@@ -1324,43 +1319,6 @@
 
 			prevIndex = i;
 		}
-
-		/*
-		var result = [];
-		var propString = '';
-		var prevIndex = 0;
-		var rawIndex = 0;
-		var nextProp, nextNextProp;
-
-		for (var i = 0, goal = chars.length; i <= goal; i++, propString += nextProp) {
-			// next sentence break property
-			nextProp = String.fromCharCode(
-				96 + (i >= goal ? SBP_EOT : sentenceFinder(chars[i])));
-
-			// next next sentence break property but skip Extend and Format
-			var j = i + 1;
-			do {
-				nextNextProp = String.fromCharCode(
-					96 + (j >= goal ? SBP_EOT : sentenceFinder(chars[j])));
-				j++;
-			} while (/[eg]/.test(nextNextProp));
-
-			// check if it can be broke
-			if (!canBreakSentence(propString, nextProp, nextNextProp)) continue;
-
-			// store the sentence
-			if (prevIndex < i) {
-				result.push({
-					text: chars.slice(prevIndex, i).map(getUTF16FromCodePoint).join(''),
-					index: prevIndex,
-					length: i - prevIndex,
-					type: propString.substr(-1).charCodeAt(0) - 96
-				});
-			}
-
-			prevIndex = i;
-		}
-		*/
 
 		return result;
 	}
@@ -1415,56 +1373,56 @@
 		if (prev == '') return true;
 
 		//   GB2: ÷  eot
-		if (next == 'c') return true;
+		if (next == 'b') return true;
 
 		// Do not break between a CR and LF.
 		// Otherwise, break before and after controls.
 		//   GB3: CR  ×  LF
-		if (/e$/.test(prev) && next == 'f') return false;
+		if (/d$/.test(prev) && next == 'e') return false;
 
 		//   GB4: ( Control | CR | LF )  ÷
-		if (/[gef]$/.test(prev)) return true;
+		if (/[fde]$/.test(prev)) return true;
 
 		//   GB5: ÷  ( Control | CR | LF )
-		if (/^[gef]/.test(next)) return true;
+		if (/^[fde]/.test(next)) return true;
 
 		// Do not break Hangul syllable sequences.
 		//   GB6: L  ×  ( L | V | LV | LVT )
-		if (/k$/.test(prev) && /^[klno]/.test(next)) return false;
+		if (/j$/.test(prev) && /^[jkmn]/.test(next)) return false;
 
 		//   GB7: ( LV | V )  ×  ( V | T )
-		if (/[nl]$/.test(prev) && /^[lm]/.test(next)) return false;
+		if (/[mk]$/.test(prev) && /^[kl]/.test(next)) return false;
 
 		//   GB8: ( LVT | T)  ×  T
-		if (/[om]$/.test(prev) && next == 'm') return false;
+		if (/[nl]$/.test(prev) && next == 'l') return false;
 
 		// Do not break before extending characters.
 		//   GB9: ×  ( Extend | ZWJ )
-		if (/^[hr]/.test(next)) return false;
+		if (/^[gq]/.test(next)) return false;
 
 		// Only for extended grapheme clusters:
 		// Do not break before SpacingMarks, or after Prepend characters.
 		//   GB9a:          ×  SpacingMark
-		if (next == 'j') return false;
+		if (next == 'i') return false;
 
 		//   GB9b: Prepend  ×
-		if (/d$/.test(prev)) return false;
+		if (/c$/.test(prev)) return false;
 
 		// Do not break within emoji modifier sequences or emoji zwj sequences.
 		//   GB10: ( E_Base | EBG ) Extend*  ×  E_Modifier
-		if (/[pt]h*$/.test(prev) && next == 'q') return false;
+		if (/[os]g*$/.test(prev) && next == 'p') return false;
 
 		//   GB11:                      ZWJ  ×  (Glue_After_Zwj | EBG)
-		if (/r$/.test(prev) && /^[st]/.test(next)) return false;
+		if (/q$/.test(prev) && /^[rs]/.test(next)) return false;
 
 		// Do not break within emoji flag sequences. That is, do not break
 		// between regional indicator (RI) symbols if there is an odd number of
 		// RI characters before the break point.
 		//   GB12: ^ ( RI RI )* RI  ×  RI
-		if (/^(ii)*i$/.test(prev) && next == 'i') return false;
+		if (/^(hh)*h$/.test(prev) && next == 'h') return false;
 
 		//   GB13: [^RI] ( RI RI )* RI  ×  RI
-		if (/[^i](ii)*i$/.test(prev) && next == 'i') return false;
+		if (/[^h](hh)*h$/.test(prev) && next == 'h') return false;
 
 		// Otherwise, break everywhere.
 		//   GB999: Any  ÷  Any
@@ -1536,7 +1494,7 @@
 		return result;
 	}
 
-	function canBreakWord (prev, next, nextNext) {
+	function canBreakWord (prev, next) {
 		/*
 		 * This rules are taken from:
 		 * http://unicode.org/reports/tr29/, Version 9.0.0, 2016-06-20
@@ -1548,11 +1506,11 @@
 		if (prev == '') return true;
 
 		//  WB2:  ÷  eot
-		if (next == 'a') return true;
+		if (/^a/.test(next)) return true;
 
 		//Do not break within CRLF.
 		//  WB3: CR  ×  LF
-		if (/f$/.test(prev) && next == 'g') return false;
+		if (/f$/.test(prev) && /^g/.test(next)) return false;
 
 		//Otherwise break before and after Newlines (including CR and LF)
 		//  WB3a: (Newline | CR | LF)  ÷
@@ -1571,6 +1529,7 @@
 		//  WB4: X (Extend | Format | ZWJ)*  →  X
 		if (/^[ikt]/.test(next)) return false;
 		prev = prev.replace(/([^afgh])[ikt]+/g, '$1');
+		next = next.replace(/(^|[^afgh])[ikt]+/g, '$1');
 
 		//Do not break between most letters.
 		//  WB5: AHLetter  ×  AHLetter
@@ -1580,52 +1539,52 @@
 		//Do not break letters across certain punctuation.
 		//  WB6: AHLetter  ×  (MidLetter | MidNumLetQ) AHLetter
 		//  * MidNumLetQ represents (MidNumLet | Single_Quote)
-		if (/[le]$/.test(prev) && /^[mod]/.test(next) && /^[le]/.test(nextNext)) return false;
+		if (/[le]$/.test(prev) && /^[mod][le]/.test(next)) return false;
 
 		//  WB7: AHLetter (MidLetter | MidNumLetQ)  ×  AHLetter
 		if (/[le][mod]$/.test(prev) && /^[le]/.test(next)) return false;
 
 		//  WB7a: Hebrew_Letter  ×  Single_Quote
-		if (/e$/.test(prev) && next == 'd') return false;
+		if (/e$/.test(prev) && /^d/.test(next)) return false;
 
 		//  WB7b: Hebrew_Letter  ×  Double_Quote Hebrew_Letter
-		if (/e$/.test(prev) && next == 'c' && nextNext == 'e') return false;
+		if (/e$/.test(prev) && /^ce/.test(next)) return false;
 
 		//  WB7c: Hebrew_Letter Double_Quote  ×  Hebrew_Letter
-		if (/ec$/.test(prev) && next == 'e') return false;
+		if (/ec$/.test(prev) && /^e/.test(next)) return false;
 
 		//Do not break within sequences of digits, or digits adjacent to
 		//letters (“3a”, or “A3”).
 		//  WB8: Numeric  ×  Numeric
-		if (/p$/.test(prev) && next == 'p') return false;
+		if (/p$/.test(prev) && /^p/.test(next)) return false;
 
 		//  WB9: AHLetter  ×  Numeric
-		if (/[le]$/.test(prev) && next == 'p') return false;
+		if (/[le]$/.test(prev) && /^p/.test(next)) return false;
 
 		//  WB10: Numeric  ×  AHLetter
 		if(/p$/.test(prev) && /^[le]/.test(next)) return false;
 
 		//Do not break within sequences, such as “3.2” or “3,456.789”.
 		//  WB11: Numeric (MidNum | MidNumLetQ)  ×  Numeric
-		if (/p[nod]$/.test(prev) && next == 'p') return false;
+		if (/p[nod]$/.test(prev) && /^p/.test(next)) return false;
 
 		//  WB12: Numeric  ×  (MidNum | MidNumLetQ) Numeric
-		if (/p$/.test(prev) && /^[nod]/.test(next) && nextNext == 'p') return false;
+		if (/p$/.test(prev) && /^[nod]p/.test(next)) return false;
 
 		//Do not break between Katakana.
 		//  WB13: Katakana  ×  Katakana
 		//  [unistring extension]: do not use this rule. use WB13-unistring-1 instead of.
-		//if (/w$/.test(prev) && next == 'w') return false;
+		//if (/w$/.test(prev) && /^w/.test(next)) return false;
 
 		//[unistring extension]: Do not break between Katakana, Hiragana, KanaExtension
 		//  WB13-unistring-1: Katakana       ×  Katakana
 		//                    Hiragana       ×  Hiragana
 		//                    KanaExtension  ×  KanaExtension
-		if (/[wxy]$/.test(prev) && prev.substr(-1) == next) return false;
+		if (/[wxy]$/.test(prev) && prev.substr(-1) == next.charAt(0)) return false;
 
 		//[unistring extension]: Do not break between Kana and its extension
 		//  WB13-unistring-2: (Katakana | Hiragana)  ×  KanaExtension
-		if (/[wx]$/.test(prev) && next == 'y') return false;
+		if (/[wx]$/.test(prev) && /^y/.test(next)) return false;
 
 		//[unistring extension]: Do not break between Kana and its extension
 		//  WB13-unistring-3: KanaExtension  ×  (Katakana | Hiragana)
@@ -1634,7 +1593,7 @@
 		//Do not break from extenders.
 		//  WB13a: (AHLetter | Numeric | Katakana | Hiragana | KanaExtension | ExtendNumLet)  ×  ExtendNumLet
 		//  [unistring extension]: added Hiragana and KanaExtension
-		if (/[lepwxyq]$/.test(prev) && next == 'q') return false;
+		if (/[lepwxyq]$/.test(prev) && /^q/.test(next)) return false;
 
 		//  WB13b: ExtendNumLet  ×  (AHLetter | Numeric | Katakana | Hiragana | KanaExtension)
 		//  [unistring extension]: added Hiragana and KanaExtension
@@ -1642,16 +1601,16 @@
 
 		//Do not break within emoji modifier sequences.
 		//  WB14: (E_Base | EBG)  ×  E_Modifier
-		if (/[rv]$/.test(prev) && next == 's') return false;
+		if (/[rv]$/.test(prev) && /^s/.test(next)) return false;
 
 		//Do not break within emoji flag sequences. That is, do not break
 		//between regional indicator (RI) symbols if there is an odd number of
 		//RI characters before the break point.
 		//  WB15: ^ (RI RI)* RI  ×  RI
-		if (/^(jj)*j$/.test(prev) && next == 'j') return false;
+		if (/^(jj)*j$/.test(prev) && /^j/.test(next)) return false;
 
 		//  WB16: [^RI] (RI RI)* RI  ×  RI
-		if (/[^j](jj)*j$/.test(prev) && next == 'j') return false;
+		if (/[^j](jj)*j$/.test(prev) && /^j/.test(next)) return false;
 
 		//Otherwise, break everywhere (including around ideographs).
 		//  WB999: Any  ÷  Any
@@ -1660,6 +1619,7 @@
 
 	function isInScriptWord (prev, next, prevcp, nextcp) {
 		prev = prev.substr(-1);
+		next = next.charAt(0);
 
 		//  Space  ×  Space
 		if (prev == 'z' && next == 'z') return true;
@@ -1674,9 +1634,7 @@
 	}
 
 	function getSentences (s) {
-		var codePoints = resolveSurrogates(s);
-		var result = buildSentenceClusters(codePoints);
-		return result;
+		return buildSentenceClusters(resolveSurrogates(s));
 	}
 
 	function canBreakSentence (prev, next) {
