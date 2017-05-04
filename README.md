@@ -4,7 +4,7 @@ Unistring
 ## What is this?
 
 Unistring is a javascript library to handle "unicode string" easily and
-correctly.  javascripts's native string is also unicode string, however it is
+correctly.  javascript's native string is also unicode string, however it is
 actually simple UTF-16 sequence, so you must handle unicode's complicated
 mechanism such as surrogate pairs and combining character sequence.
 
@@ -179,7 +179,8 @@ words = [
 ]
  */
 
-// break into words by UAX#29 word boundary rule, with Unistring's script extension that treat neighboring same script character as part of word
+// break into words by UAX#29 word boundary rule, with Unistring's script
+// extension that treat neighboring same script character as part of word
 var words = Unistring.getWords('漢字カタカナひらがな1.23', true);
 /*
 words = [
@@ -293,7 +294,7 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `clone(): Unistring`
 * `dump(): string`
 * `toString(): string`
-* `delete(start, length): Unistring`
+* `delete(start [,length]): Unistring`
 * `insert(str, start): Unistring`
 * `append(str): Unistring`
 * `codePointsAt(index): number[]`
@@ -304,22 +305,34 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 * `getCrusterIndexFromUTF16Index(index): number`
 * `charAt(index): string`
 * `charCodeAt(index): number`
-* `substring(start, end): Unistring`
-* `substr(start, length): Unistring`
-* `slice(start, end): Unistring`
+* `substring(start [,end]): Unistring`
+* `substr(start [,length]): Unistring`
+* `slice(start [,end]): Unistring`
 * `concat(str): Unistring`
 * `indexOf(str): number`
 * `lastIndexOf(str): number`
+* `toLowerCase([useLocale]): Unistring`
+* `toUpperCase([useLocale]): Unistring`
 
 ### Class methods
 
 * `getCodePointArray(str): number[]`
 * `getGraphemeBreakProp(codePoint): number`
 * `getWordBreakProp(codePoint): number`
+* `getSentenceBreakProp(codePoint): number`
 * `getScriptProp(codePoint): number`
 * `getUTF16FromCodePoint(codePoint): string`
 * `getCodePointString(codePoint, type): string`
-* `getGBPCodeFromName(name): number`
-* `getWBPCodeFromName(name): number`
 * `getWords(str [,useScripts]): object[]`
 * `getSentences(str): object[]`
+
+### Class constants
+
+* `GBP: Object` - an associative array from name of GraphemeBreakProperty to corresponding integer value
+* `WBP: Object` - an associative array from name of WordBreakProperty to corresponding integer value
+* `SBP: Object` - an associative array from name of SentenceBreakProperty to corresponding integer value
+* `SCRIPT: Object` - an associative array from name of ScriptProperty to corresponding integer value
+* `GBP_NAMES: string[]`
+* `WBP_NAMES: string[]`
+* `SBP_NAMES: string[]`
+* `SCRIPT_NAMES: string[]`

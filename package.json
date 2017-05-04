@@ -1,6 +1,6 @@
 {
 	"name": "unistring",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"description": "javascript library to handle 'unicode string' easily and correctly",
 	"main": "unistring.js",
 	"author": "akahuku@gmail.com",
@@ -8,7 +8,7 @@
 		"minimist": "~1.2.0"
 	},
 	"keywords": [
-		"unicode", "grapheme cluster", "word boundary", "UAX#29"
+		"unicode", "grapheme cluster", "word boundary", "sentence boundary", "UAX#29"
 	],
 	"license": "MIT",
 	"repository": {
