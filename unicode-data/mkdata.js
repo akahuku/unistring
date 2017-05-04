@@ -22,7 +22,7 @@ var args = require('minimist')(process.argv.slice(2));
 
 function loadFiles (fileURLs) {
 	if (fileURLs.length == 0) {
-		console.log('all files are exists.');
+		console.log('all files exists.');
 		return;
 	}
 	var loadSpec = fileURLs.shift();
@@ -33,7 +33,7 @@ function loadFiles (fileURLs) {
 	}
 	try {
 		var stat = fs.statSync(path);
-		console.log('exists: ' + path);
+		console.log('found: ' + path);
 		loadFiles(fileURLs);
 	}
 	catch (e) {
@@ -41,7 +41,7 @@ function loadFiles (fileURLs) {
 			console.log('exception: ' + e.message);
 			throw err;
 		}
-		console.log('not exists, loading: ' + url);
+		console.log('not found, loading: ' + url);
 		http.get(url, function (res) {
 			var content = '';
 			res.setEncoding('utf8');
@@ -231,6 +231,10 @@ function main () {
 				path: __dirname + '/'
 			},
 			{
+				url: 'http://www.unicode.org/Public/#version#/ucd/auxiliary/SentenceBreakProperty.txt',
+				path: __dirname + '/'
+			},
+			{
 				url: 'http://www.unicode.org/Public/#version#/ucd/Scripts.txt',
 				path: __dirname + '/'
 			},
@@ -308,6 +312,18 @@ function main () {
 		};
 	}
 
+	else if (args.e || args['sentence-break-properties']) {
+		params.srcFileName = __dirname + '/SentenceBreakProperty.txt';
+		params.propIndex = {
+			'Other': 0,
+			'SOT': 1,
+			'EOT': 2
+		};
+		params.tableName = 'SENTENCE_BREAK_PROPS';
+		params.structLengthVarName = 'SENTENCE_BREAK_PROP_UNIT_LENGTH';
+		params.constPrefix = 'SBP';
+	}
+
 	if (!params.srcFileName || args.h || args['?'] || args.help) {
 		console.log([
 			'options:',
@@ -315,7 +331,8 @@ function main () {
 			'  -l --load-files',
 			'  -s --scripts',
 			'  -g --grapheme-break-properties',
-			'  -w --word-break-properties'
+			'  -w --word-break-properties',
+			'  -e --sentence-break-properties'
 		].join('\n'));
 		process.exit(1);
 	}

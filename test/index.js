@@ -409,6 +409,40 @@ var tests = {
 
 		test.eq('#2-1', 'abc あいうえお', s1.toString());
 		test.eq('#2-2', 'ABC あいうえお', s3.toString());
+	},
+	testGetSentences: function (test) {
+		readFileByLine(
+			__dirname + '/SentenceBreakTest.txt',
+			function (line, lineIndex) {
+				line = line.replace(/#.*$/, '');
+				line = line.replace(/^\s+|\s+$/g, '');
+				if (!/^÷ .+ ÷$/.test(line)) return;
+
+				var testString = '';
+				line.replace(/[0-9A-F]+/g, function ($0) {
+					testString += Unistring.getUTF16FromCodePoint(
+						parseInt($0, 16)
+					);
+					return $0;
+				});
+
+				var result = [];
+				Unistring.getSentences(testString).forEach(function (sentence) {
+					var tmp = [];
+					Unistring(sentence.text).forEach(function (cluster) {
+						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
+					});
+					result.push(tmp.join(' × '));
+				});
+				result = '÷ ' + result.join(' ÷ ') + ' ÷';
+
+				test.eq('line ' + (lineIndex + 1), line, result);
+			},
+			function () {
+				test.done();
+			}
+		);
+		return false;
 	}
 };
 
