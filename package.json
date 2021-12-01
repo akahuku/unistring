@@ -1,8 +1,9 @@
 {
 	"name": "unistring",
-	"version": "0.3.0",
+	"version": "0.4.0",
 	"description": "javascript library to handle 'unicode string' easily and correctly",
 	"main": "unistring.js",
+	"type": "module",
 	"author": "akahuku@gmail.com",
 	"devDependencies": {
 		"minimist": "~1.2.0"

@@ -16,23 +16,25 @@
  *   note: code point order must be sorted.
  */
 
-const fs = require('fs');
-const http = require('http');
-const args = require('minimist')(process.argv.slice(2));
+import fs from 'fs';
+import http from 'http';
+import minimist from 'minimist';
+
+const args = minimist(process.argv.slice(2));
 
 function loadFiles (fileURLs) {
 	if (fileURLs.length == 0) {
 		console.log('all files exists.');
 		return;
 	}
-	var loadSpec = fileURLs.shift();
-	var url = loadSpec.url;
-	var path = loadSpec.path;
+	const loadSpec = fileURLs.shift();
+	const url = loadSpec.url;
+	let path = loadSpec.path;
 	if (path.substr(-1) == '/') {
 		path += /[^\/]+$/.exec(url)[0];
 	}
 	try {
-		var stat = fs.statSync(path);
+		const stat = fs.statSync(path);
 		console.log('found: ' + path);
 		loadFiles(fileURLs);
 	}
@@ -42,11 +44,11 @@ function loadFiles (fileURLs) {
 			throw err;
 		}
 		console.log('not found, loading: ' + url);
-		http.get(url, function (res) {
-			var content = '';
+		http.get(url, res => {
+			let content = '';
 			res.setEncoding('utf8');
-			res.on('data', function (chunk) {content += chunk});
-			res.on('end', function (res) {
+			res.on('data', chunk => {content += chunk});
+			res.on('end', res => {
 				fs.writeFileSync(path, content, 'utf8');
 				console.log('loaded: ' + path);
 				loadFiles(fileURLs);
@@ -56,7 +58,7 @@ function loadFiles (fileURLs) {
 }
 
 function setup (params) {
-	fs.readFile(params.srcFileName, 'utf8', function (err, data) {
+	fs.readFile(params.srcFileName, 'utf8', (err, data) => {
 		if (err) throw err;
 		prepare(params, data);
 	});
@@ -66,13 +68,13 @@ function prepare (params, data) {
 	data = data.split('\n');
 	params.onSourceLoad && (data = params.onSourceLoad(data));
 
-	for (var i = 0, goal = data.length; i < goal; i++) {
-		var line = data[i];
+	for (let i = 0, goal = data.length; i < goal; i++) {
+		let line = data[i];
 		line = line.replace(/#.*/, '');
 		line = line.replace(/^\s+|\s+$/g, '');
 		if (line == '') continue;
 
-		var re = /^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.+)/.exec(line);
+		let re = /^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*;\s*(.+)/.exec(line);
 		if (!re) continue;
 
 		if (!re[2]) {
@@ -90,9 +92,9 @@ function prepare (params, data) {
 	}
 
 	params.onDataCreate && (params.propData = params.onDataCreate(params.propData));
-	params.propData.sort(function (a, b) {return a[0] - b[0]});
+	params.propData.sort((a, b) => a[0] - b[0]);
 
-	for (var i = 0; i < params.propData.length - 1; i++) {
+	for (let i = 0; i < params.propData.length - 1; i++) {
 		if (params.propData[i][1] + 1 == params.propData[i + 1][0]
 		&&  params.propData[i][2] == params.propData[i + 1][2]) {
 			params.propData[i][1] = params.propData[i + 1][1];
@@ -105,18 +107,18 @@ function prepare (params, data) {
 }
 
 function makeJs (params) {
-	function output () {
-		console.log(Array.prototype.slice.call(arguments).join('\n'));
+	function output (...args) {
+		console.log(args.join('\n'));
 	}
 	function self () {
-		return process.argv.map(function(s, index) {
+		return process.argv.map((s, index) => {
 			return index < 2 ? /[^\/]+$/.exec(s)[0] : s;
 		}).join(' ');
 	}
 
-	var propData = params.propData;
-	var propIndex = params.propIndex;
-	var UNIT_SIZE = 5;
+	const propData = params.propData;
+	const propIndex = params.propIndex;
+	const UNIT_SIZE = 5;
 
 	output(
 		'\t// GENERATED CODE START <<<1',
@@ -128,7 +130,7 @@ function makeJs (params) {
 	 * table
 	 */
 
-	for (var i = 0; i < propData.length; i++) {
+	for (let i = 0; i < propData.length; i++) {
 		if (propData[i][1] - propData[i][0] + 1 > 2047) {
 			propData.splice(i + 1, 0, [
 				propData[i][0] + 2047,
@@ -138,9 +140,9 @@ function makeJs (params) {
 			propData[i][1] = propData[i][0] + 2047 - 1;
 		}
 	}
-	var tmp = new Buffer(propData.length * UNIT_SIZE);
-	var offset = 0;
-	for (var i = 0, goal = propData.length; i < goal; i++) {
+	let tmp = new Buffer(propData.length * UNIT_SIZE);
+	let offset = 0;
+	for (let i = 0, goal = propData.length; i < goal; i++) {
 		if (propData[i][2] > 255) {
 			throw new Error(
 				'#' + i + ': property value too large: ' +
@@ -215,8 +217,8 @@ function makeJs (params) {
 }
 
 function main () {
-	var params = {
-		unicodeVersion: '9.0.0',
+	let params = {
+		unicodeVersion: '14.0.0',
 		propData: []
 	};
 
@@ -225,7 +227,7 @@ function main () {
 	}
 
 	if (args.l || args['load-files']) {
-		var files = [
+		const files = [
 			{
 				url: 'http://www.unicode.org/Public/#version#/ucd/auxiliary/GraphemeBreakProperty.txt',
 				path: __dirname + '/'
@@ -292,19 +294,19 @@ function main () {
 		params.structLengthVarName = 'WORD_BREAK_PROP_UNIT_LENGTH';
 		params.constPrefix = 'WBP';
 		params.outputCode = true;
-		params.onSourceLoad = function (data) {
+		params.onSourceLoad = data => {
 			// strip Katakana
-			data = data.filter(function (line) {
+			data = data.filter(line => {
 				return !/;\s*Katakana\s*#/.test(line);
 			});
 
 			// override customized data
 			try {
-				var dataString = data.join('\n');
-				var overrides = fs.readFileSync(__dirname + '/WordBreakOverrides.txt', 'utf8')
+				const dataString = data.join('\n');
+				const overrides = fs.readFileSync(__dirname + '/WordBreakOverrides.txt', 'utf8')
 					.split('\n')
-					.filter(function (line) {
-						var re = /^([0-9A-F]+(\.\.[0-9A-F]+)?)/.exec(line);
+					.filter(line => {
+						let re = /^([0-9A-F]+(\.\.[0-9A-F]+)?)/.exec(line);
 						return re ? dataString.indexOf('\n' + re[1]) < 0 : true;
 					});
 
