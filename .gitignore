@@ -5,3 +5,6 @@ desktop.ini
 Session.vim
 node_modules
 package-lock.json
+unicode-data/*.txt
+!unicode-data/WordBreakOverrides.txt
+test/*.txt
