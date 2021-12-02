@@ -23,13 +23,13 @@ console.log(us.toString());   // returns "C'est délicieux!" as string
 
 // break into words by UAX#29 word boundary rule
 let words1 = Unistring.getWords('The quick (“brown”) fox can’t jump 32.3 feet, right?');
-console.log('words = ' + JSON.stringify(words1, null, ' '));
+console.log('words1 = ' + JSON.stringify(words1, null, ' '));
 /*
  */
 
 // break into words by UAX#29 word boundary rule, with Unistring's script extension
 let words2 = Unistring.getWords('// 漢字カタカナひらがな1.23', true);
-console.log('words = ' + JSON.stringify(words2, null, ' '));
+console.log('words2 = ' + JSON.stringify(words2, null, ' '));
 
 // break into sentences by UAX#29 sentence boundary rule
 let sentences = Unistring.getSentences(

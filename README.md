@@ -8,13 +8,15 @@ correctly.  javascript's native string is also unicode string, however it is
 actually simple UTF-16 sequence, so you must handle unicode's complicated
 mechanism such as surrogate pairs and combining character sequence.
 
+The currently supported Unicode version is 14.0.0.
+
 Unistring hides this complexity:
 
 ## Example
 
 ```javascript
-var s = 'de\u0301licieux\uD83D\uDE0B'; // délicieux😋
-var us = Unistring(s);
+let s = 'de\u0301licieux\uD83D\uDE0B'; // délicieux😋
+let us = Unistring(s);
 
 // retrieving number of 'user-perceived characters'...
 s.length;        // fail, returns 12
@@ -35,9 +37,9 @@ us.append('!');
 us.toString();   // returns "C'est délicieux!" as string
 
 // break into words by UAX#29 word boundary rule
-var words = Unistring.getWords('The quick (“brown”) fox can’t jump 32.3 feet, right?');
+let words1 = Unistring.getWords('The quick (“brown”) fox can’t jump 32.3 feet, right?');
 /*
-words = [
+words1 = [
  {
   "text": "The",
   "index": 0,
@@ -48,7 +50,7 @@ words = [
   "text": " ",
   "index": 3,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "quick",
@@ -60,7 +62,7 @@ words = [
   "text": " ",
   "index": 9,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "(",
@@ -96,7 +98,7 @@ words = [
   "text": " ",
   "index": 19,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "fox",
@@ -108,7 +110,7 @@ words = [
   "text": " ",
   "index": 23,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "can’t",
@@ -120,7 +122,7 @@ words = [
   "text": " ",
   "index": 29,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "jump",
@@ -132,7 +134,7 @@ words = [
   "text": " ",
   "index": 34,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "32.3",
@@ -144,7 +146,7 @@ words = [
   "text": " ",
   "index": 39,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "feet",
@@ -162,7 +164,7 @@ words = [
   "text": " ",
   "index": 45,
   "length": 1,
-  "type": 26
+  "type": 19
  },
  {
   "text": "right",
@@ -181,30 +183,42 @@ words = [
 
 // break into words by UAX#29 word boundary rule, with Unistring's script
 // extension that treat neighboring same script character as part of word
-var words = Unistring.getWords('漢字カタカナひらがな1.23', true);
+let words2 = Unistring.getWords('// 漢字カタカナひらがな1.23', true);
 /*
-words = [
+words2 = [
  {
-  "text": "漢字",
+  "text": "//",
   "index": 0,
   "length": 2,
   "type": 0
  },
  {
-  "text": "カタカナ",
+  "text": " ",
   "index": 2,
+  "length": 1,
+  "type": 19
+ },
+ {
+  "text": "漢字",
+  "index": 3,
+  "length": 2,
+  "type": 0
+ },
+ {
+  "text": "カタカナ",
+  "index": 5,
   "length": 4,
-  "type": 23
+  "type": 20
  },
  {
   "text": "ひらがな",
-  "index": 6,
+  "index": 9,
   "length": 4,
-  "type": 24
+  "type": 21
  },
  {
   "text": "1.23",
-  "index": 10,
+  "index": 13,
   "length": 4,
   "type": 16
  }
@@ -212,7 +226,7 @@ words = [
  */
 
 // break into sentences by UAX#29 sentence boundary rule
-var sentences = Unistring.getSentences(
+let sentences = Unistring.getSentences(
 	'ある日の事でございます。御釈迦様は極楽の蓮池のふちを、独りでぶらぶら御歩きになっていらっしゃいました。' +
 	'He said, “Are you going?”  John shook his head.'
 );
@@ -263,7 +277,7 @@ Unistring function will be defined to window object.
 ### Use it
 
 ```javascript
-var us = Unistring('de\u0301licieux\uD83D\uDE0B');
+let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ```
 
 
@@ -277,8 +291,8 @@ var us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ### Use it
 
 ```javascript
-var Unistring = require('unistring');
-var us = Unistring('de\u0301licieux\uD83D\uDE0B');
+import Unistring from 'unistring.js';
+let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ```
 
 

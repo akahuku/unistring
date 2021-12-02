@@ -1,20 +1,27 @@
-#!/usr/bin/node
+#!/usr/bin/env node
+/*
+ * unit test runner
+ * ================
+ */
 
-var fs = require('fs');
-var Unistring = require('../unistring');
-var testRunner = require('./test');
+import fs from 'fs';
+import path from 'path';
+import Unistring from './unistring.js';
+import testRunner from './test/testRunner.js';
 
-var tests = {
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+
+const tests = {
 	testFind: function (test) {
 		readFileByLine(
-			__dirname + '/../unicode-data/GraphemeBreakProperty.txt',
+			__dirname + '/unicode-data/GraphemeBreakProperty.txt',
 			function (line, lineIndex) {
-				var re = /^([0-9A-F]+)[^;]+;\s*(\S+)/.exec(line);
+				let re = /^([0-9A-F]+)[^;]+;\s*(\S+)/.exec(line);
 				if (!re) return;
 
-				var codePoint = parseInt(re[1], 16);
-				var codePointString = Unistring.getCodePointString(codePoint, 'unicode');
-				var code = Unistring.GBP[re[2]];
+				const codePoint = parseInt(re[1], 16);
+				const codePointString = Unistring.getCodePointString(codePoint, 'unicode');
+				const code = Unistring.GBP[re[2]];
 				if (code == undefined) {
 					test.fail(
 						codePointString + ' failed:' +
@@ -23,7 +30,7 @@ var tests = {
 					return;
 				}
 
-				var result = Unistring.getGraphemeBreakProp(codePoint);
+				const result = Unistring.getGraphemeBreakProp(codePoint);
 				test.eq('line ' + (lineIndex + 1) + ': ' + re[1], code, result);
 			},
 			function () {
@@ -34,21 +41,21 @@ var tests = {
 	},
 	testGraphemeBreak: function (test) {
 		readFileByLine(
-			__dirname + '/GraphemeBreakTest.txt',
+			__dirname + '/test/GraphemeBreakTest.txt',
 			function (line, lineIndex) {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
 				if (!/^÷ .+ ÷$/.test(line)) return;
 
-				var testString = '';
-				line.replace(/[0-9A-F]+/g, function ($0) {
+				let testString = '';
+				line.replace(/[0-9A-F]+/g, $0 => {
 					testString += Unistring.getUTF16FromCodePoint(
 						parseInt($0, 16)
 					);
 					return $0;
 				});
 
-				var result = (new Unistring(testString)).dump();
+				const result = (new Unistring(testString)).dump();
 				test.eq('line ' + (lineIndex + 1), line, result);
 			},
 			function () {
@@ -58,11 +65,11 @@ var tests = {
 		return false;
 	},
 	testToString: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1', 'か\u3099き\u3099く\u3099け\u3099こ\u3099', s.toString());
 	},
 	testDelete: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-0', 0, s.rawIndexAt(0));
 		test.eq('#1-1', 2, s.rawIndexAt(1));
 		test.eq('#1-2', 4, s.rawIndexAt(2));
@@ -90,7 +97,7 @@ var tests = {
 		test.eq('#5-1', '', s.toString());
 	},
 	testInsert: function (test) {
-		var s = new Unistring('foobar');
+		const s = new Unistring('foobar');
 
 		s.insert('BAZ', 0);
 		test.eq('#1-1', 'BAZfoobar', s.toString());
@@ -106,13 +113,13 @@ var tests = {
 		test.eq('#4-1', 'BAZfooBAXbaBAQrFOO', s.toString());
 	},
 	testCodePointsAt: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', '[12365,12441]', JSON.stringify(s.codePointsAt(1)));
 
 		test.done();
 	},
 	testRawStringAt: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 'か\u3099', s.rawStringAt(0));
 		test.eq('#1-2', 'き\u3099', s.rawStringAt(1));
 		test.eq('#1-3', 'く\u3099', s.rawStringAt(2));
@@ -121,7 +128,7 @@ var tests = {
 		test.eq('#1-6', '',         s.rawStringAt(5));
 	},
 	testRawIndexAt: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 0, s.rawIndexAt(0));
 		test.eq('#1-2', 2, s.rawIndexAt(1));
 		test.eq('#1-3', 4, s.rawIndexAt(2));
@@ -130,15 +137,15 @@ var tests = {
 		test.eq('#1-6', 10, s.rawIndexAt(5));
 	},
 	testForEach: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
-		var result = '';
-		s.forEach(function (g) {
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		let result = '';
+		s.forEach(g => {
 			result += g.rawString.charAt(0);
 		});
 		test.eq('#1-1', 'かきくけこ', result);
 	},
 	testGetClusterIndexFromUTF16Index: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 0, s.getClusterIndexFromUTF16Index(0));
 		test.eq('#1-2', 0, s.getClusterIndexFromUTF16Index(1));
 		test.eq('#1-3', 1, s.getClusterIndexFromUTF16Index(2));
@@ -151,7 +158,7 @@ var tests = {
 		test.eq('#1-10', 4, s.getClusterIndexFromUTF16Index(9));
 	},
 	testLength: function (test) {
-		var s = new Unistring(
+		const s = new Unistring(
 			// ZALGO!
 			'\u005a\u0351\u036b\u0343\u036a\u0302\u036b\u033d\u034f\u0334\u0319\u0324\u031e\u0349\u035a\u032f\u031e\u0320\u034d' +
 			'\u0041\u036b\u0357\u0334\u0362\u0335\u031c\u0330\u0354' +
@@ -163,7 +170,7 @@ var tests = {
 		test.eq('#1', 6, s.length);
 	},
 	testCharAt: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', 'か', s.charAt(0));
 		test.eq('#1-2', 'き', s.charAt(1));
@@ -175,7 +182,7 @@ var tests = {
 		test.eq('#2-2', '', s.charAt(100));
 	},
 	testCharCodeAt: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', 12363, s.charCodeAt(0));
 		test.eq('#1-2', 12365, s.charCodeAt(1));
@@ -187,8 +194,8 @@ var tests = {
 		test.t('#2-2', isNaN(s.charCodeAt(100)));
 	},
 	testSubstring: function (test) {
-		var s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
-		var s2 = s1.substring(1, 4);
+		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		let s2 = s1.substring(1, 4);
 		test.eq('#1-1', 'き\u3099く\u3099け\u3099', s2.toString());
 
 		s2 = s1.substring(2, 0);
@@ -198,8 +205,8 @@ var tests = {
 		test.eq('#3-1', 'か\u3099き\u3099く\u3099け\u3099こ\u3099', s2.toString());
 	},
 	testSubstr: function (test) {
-		var s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
-		var s2 = s1.substr(1, 2);
+		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		let s2 = s1.substr(1, 2);
 		test.eq('#1-1', 'き\u3099く\u3099', s2.toString());
 
 		s2 = s1.substr(2, 0);
@@ -215,8 +222,8 @@ var tests = {
 		test.eq('#5-1', 'こ\u3099', s2.toString());
 	},
 	testSlice: function (test) {
-		var s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
-		var s2 = s1.slice(1, 4);
+		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		let s2 = s1.slice(1, 4);
 		test.eq('#1-1', 'き\u3099く\u3099け\u3099', s2.toString());
 		test.eq('#1-2', 0, s2.rawIndexAt(0));
 		test.eq('#1-3', 2, s2.rawIndexAt(1));
@@ -232,7 +239,7 @@ var tests = {
 		test.eq('#4-1', 'こ\u3099', s2.toString());
 	},
 	testConcat: function (test) {
-		var s = Unistring('foo');
+		const s = Unistring('foo');
 		s.concat(Unistring('bar'));
 
 		test.eq('#1-1', 'foobar', s.toString());
@@ -244,14 +251,14 @@ var tests = {
 		test.eq('#1-7', 5, s.rawIndexAt(5));
 	},
 	testIndexOf: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', -1, s.indexOf('か'));
 		test.eq('#1-2', -1, s.indexOf('\u3099'));
 		test.eq('#1-3', 4, s.indexOf('こ\u3099'));
 	},
 	testLastIndexOf: function (test) {
-		var s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
+		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', -1, s.lastIndexOf('か'));
 		test.eq('#1-2', -1, s.lastIndexOf('\u3099'));
@@ -259,24 +266,24 @@ var tests = {
 	},
 	testGetWords: function (test) {
 		readFileByLine(
-			__dirname + '/WordBreakTest.txt',
+			__dirname + '/test/WordBreakTest.txt',
 			function (line, lineIndex) {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
 				if (!/^÷ .+ ÷$/.test(line)) return;
 
-				var testString = '';
-				line.replace(/[0-9A-F]+/g, function ($0) {
+				let testString = '';
+				line.replace(/[0-9A-F]+/g, $0 => {
 					testString += Unistring.getUTF16FromCodePoint(
 						parseInt($0, 16)
 					);
 					return $0;
 				});
 
-				var result = [];
-				Unistring.getWords(testString).forEach(function (word) {
-					var tmp = [];
-					Unistring(word.text).forEach(function (cluster) {
+				let result = [];
+				Unistring.getWords(testString).forEach(word => {
+					const tmp = [];
+					Unistring(word.text).forEach(cluster => {
 						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
 					});
 					result.push(tmp.join(' × '));
@@ -292,7 +299,7 @@ var tests = {
 		return false;
 	},
 	testGetWordsWithScript: function (test) {
-		var w = Unistring.getWords('!@#   #+.   &*_', true);
+		const w = Unistring.getWords('!@#   #+.   &*_', true);
 		test.eq('#1-1', 5, w.length);
 
 		test.eq('#2-1', '!@#', w[0].text);
@@ -314,13 +321,13 @@ var tests = {
 		test.eq('#4-5', 3, w[4].length);
 
 		test.eq('#5-1', Unistring.WBP.Other, w[0].type);
-		test.eq('#5-2', Unistring.WBP.Space, w[1].type);
+		test.eq('#5-2', Unistring.WBP.WSegSpace, w[1].type);
 		test.eq('#5-3', Unistring.WBP.MidNumLet, w[2].type);
-		test.eq('#5-4', Unistring.WBP.Space, w[3].type);
+		test.eq('#5-4', Unistring.WBP.WSegSpace, w[3].type);
 		test.eq('#5-5', Unistring.WBP.ExtendNumLet, w[4].type);
 	},
 	testGetWordsWithEastAsianScript: function (test) {
-		var w = Unistring.getWords('漢字かな交じりの文', true);
+		const w = Unistring.getWords('漢字かな交じりの文', true);
 		test.eq('#1-1', 5, w.length);
 
 		test.eq('#2-1', '漢字',   w[0].text);
@@ -330,7 +337,7 @@ var tests = {
 		test.eq('#2-5', '文',     w[4].text);
 	},
 	testWordIndexOf: function (test) {
-		var w = Unistring.getWords('!@#   #+.   &*_', true);
+		const w = Unistring.getWords('!@#   #+.   &*_', true);
 
 		test.eq('#1-1', 0, w.wordIndexOf(0));
 		test.eq('#1-2', 0, w.wordIndexOf(1));
@@ -346,11 +353,11 @@ var tests = {
 		test.eq('#3-4', -1, w.wordIndexOf(1000));
 	},
 	testComplexWordBreaking: function (test) {
-		var w = Unistring.getWords(String.fromCodePoint(
+		const w = Unistring.getWords(String.fromCodePoint(
 			0x0061, 0x1F1E6, 0x200D, 0x1F1E7, 0x1F1E8, 0x0062));
 
 		// expected result
-		var expected = [
+		const expected = [
 			{
 				text: String.fromCodePoint(0x0061),
 				index: 0,
@@ -380,56 +387,56 @@ var tests = {
 		test.eq('#1', 4, w.length);
 
 		expected.forEach((item, index) => {
-			var count = 1;
-			for (var i in item) {
+			let count = 1;
+			for (let i in item) {
 				test.eq(`#${index+1}-${count++}`, item[i], w[index][i]);
 			}
 		});
 	},
 	testToLowerCase: function (test) {
-		var s1 = new Unistring('ABC あいうえお');
-		var s2 = s1.toLowerCase();
+		const s1 = new Unistring('ABC あいうえお');
+		const s2 = s1.toLowerCase();
 
 		test.eq('#1-1', 'ABC あいうえお', s1.toString());
 		test.eq('#1-2', 'abc あいうえお', s2.toString());
 
-		var s3 = s1.toLowerCase(true);
+		const s3 = s1.toLowerCase(true);
 
 		test.eq('#2-1', 'ABC あいうえお', s1.toString());
 		test.eq('#2-2', 'abc あいうえお', s3.toString());
 	},
 	testToUpperCase: function (test) {
-		var s1 = new Unistring('abc あいうえお');
-		var s2 = s1.toUpperCase();
+		const s1 = new Unistring('abc あいうえお');
+		const s2 = s1.toUpperCase();
 
 		test.eq('#1-1', 'abc あいうえお', s1.toString());
 		test.eq('#1-2', 'ABC あいうえお', s2.toString());
 
-		var s3 = s1.toUpperCase(true);
+		const s3 = s1.toUpperCase(true);
 
 		test.eq('#2-1', 'abc あいうえお', s1.toString());
 		test.eq('#2-2', 'ABC あいうえお', s3.toString());
 	},
 	testGetSentences: function (test) {
 		readFileByLine(
-			__dirname + '/SentenceBreakTest.txt',
+			__dirname + '/test/SentenceBreakTest.txt',
 			function (line, lineIndex) {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
 				if (!/^÷ .+ ÷$/.test(line)) return;
 
-				var testString = '';
-				line.replace(/[0-9A-F]+/g, function ($0) {
+				let testString = '';
+				line.replace(/[0-9A-F]+/g, $0 => {
 					testString += Unistring.getUTF16FromCodePoint(
 						parseInt($0, 16)
 					);
 					return $0;
 				});
 
-				var result = [];
-				Unistring.getSentences(testString).forEach(function (sentence) {
-					var tmp = [];
-					Unistring(sentence.text).forEach(function (cluster) {
+				let result = [];
+				Unistring.getSentences(testString).forEach(sentence => {
+					const tmp = [];
+					Unistring(sentence.text).forEach(cluster => {
 						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
 					});
 					result.push(tmp.join(' × '));
@@ -447,11 +454,11 @@ var tests = {
 };
 
 function readFileByLine (fileName, callback, callback2) {
-	fs.readFile(fileName, 'utf8', function (err, data) {
+	fs.readFile(fileName, 'utf8', (err, data) => {
 		if (err) throw err;
 		data = data.split('\n');
-		for (var i = 0, goal = data.length; i < goal; i++) {
-			var result = callback(data[i], i);
+		for (let i = 0, goal = data.length; i < goal; i++) {
+			const result = callback(data[i], i);
 			if (result === false) {
 				break;
 			}

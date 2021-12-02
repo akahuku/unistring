@@ -31,13 +31,4 @@ FF70          ; KanaExtension # Lm       HALFWIDTH KATAKANA-HIRAGANA PROLONGED S
 # Space
 # ================================================
 
-0009          ; Space # Cc        CHARACTER TABULATION
-0020          ; Space # Zs        SPACE
-00A0          ; Space # Zs        NO-BREAK SPACE
-1680          ; Space # Zs        OGHAM SPACE MARK
-180E          ; Space # Zs        MONGOLIAN VOWEL SEPARATOR
-2000..200B    ; Space # Zs   [12] EN QUAD..ZERO WIDTH SPACE
-202F          ; Space # Zs        NARROW NO-BREAK SPACE
-205F          ; Space # Zs        MEDIUM MATHEMATICAL SPACE
-3000          ; Space # Zs        IDEOGRAPHIC SPACE
-FEFF          ; Space # Zs        ZERO WIDTH NO-BREAK SPACE
+0009          ; WSegSpace # Cc        CHARACTER TABULATION

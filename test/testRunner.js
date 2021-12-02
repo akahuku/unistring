@@ -1,13 +1,14 @@
-'use strict';
-
-function run(tests) {
+function run (tests) {
 	switch (Object.prototype.toString.call(tests)) {
 	case '[object Object]':
-		var availableTests = Object.keys(tests).filter(t => /^test/.test(t));
-		var testCount = 0;
-		var assertCount = 0;
-		var failedCount = 0;
-		var startTime = Date.now();
+		const startTime = Date.now();
+		let availableTests = Object.keys(tests).filter(t => /^only_?[tT]est/.test(t));
+		if (availableTests.length == 0) {
+			availableTests =  Object.keys(tests).filter(t => /^test/.test(t));
+		}
+		let testCount = 0;
+		let assertCount = 0;
+		let failedCount = 0;
 
 		if ('before' in tests) {
 			availableTests.unshift(tests.before);
@@ -18,7 +19,7 @@ function run(tests) {
 		}
 
 		availableTests.forEach(function (t) {
-			var tester = {
+			const tester = {
 				testName: t,
 				assertCount: 0,
 				failed: 0,
@@ -80,7 +81,7 @@ function run(tests) {
 				}
 			};
 			try {
-				var result = tests[t](tester);
+				const result = tests[t](tester);
 				result !== false && tester.done && tester.done();
 			}
 			catch (e) {
@@ -91,7 +92,7 @@ function run(tests) {
 		break;
 
 	case '[object Array]':
-		tests.forEach(function (test) {
+		tests.forEach(test => {
 			run(test);
 		});
 		break;
@@ -101,4 +102,4 @@ function run(tests) {
 	}
 }
 
-exports.run = run;
+export default {run};
