@@ -16,6 +16,10 @@
 		"type": "git",
 		"url": "https://github.com/akahuku/unistring.git"
 	},
+	"bugs": {
+		"url": "https://github.com/akahuku/unistring/issues"
+	},
+	"homepage": "https://github.com/akahuku/unistring#readme",
 	"scripts": {
 		"test": "./unittest.js"
 	}

@@ -1596,7 +1596,7 @@ Grapheme.prototype = {
 		return this.rawString;
 	},
 	clone: function () {
-		var result = new Grapheme;
+		const result = new Grapheme;
 		result.codePoints = this.codePoints.slice();
 		result.rawString = this.rawString;
 		result.rawIndex = this.rawIndex;

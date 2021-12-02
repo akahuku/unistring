@@ -8,9 +8,8 @@ correctly.  javascript's native string is also unicode string, however it is
 actually simple UTF-16 sequence, so you must handle unicode's complicated
 mechanism such as surrogate pairs and combining character sequence.
 
-The currently supported Unicode version is 14.0.0.
-
-Unistring hides this complexity:
+Unistring hides this complexity.  The currently supported Unicode version is
+14.0.0.
 
 ## Example
 
@@ -266,17 +265,10 @@ sentences = [
 
 * [unistring.js](https://raw.githubusercontent.com/akahuku/unistring/master/unistring.js)
 
-### Install
-
-```html
-<script src="/path/to/unistring.js"></script>
-```
-
-Unistring function will be defined to window object.
-
 ### Use it
 
 ```javascript
+import Unistring from './unistring.js';
 let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ```
 
@@ -291,7 +283,7 @@ let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ### Use it
 
 ```javascript
-import Unistring from 'unistring.js';
+import Unistring from 'unistring';
 let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 ```
 
