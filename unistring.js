@@ -1368,7 +1368,7 @@ function wordIndexOf (utf16Index) {
 		middle = ((left + right) / 2) >> 0;
 
 		rawIndex = this[middle].rawIndex;
-		length = this[middle].length;
+		length = this[middle].text.length;
 
 		if (rawIndex + length - 1 < utf16Index) {
 			left = middle + 1;

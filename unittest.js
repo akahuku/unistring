@@ -351,6 +351,8 @@ const tests = {
 		test.eq('#1-1', 0, w.wordIndexOf(0));
 		test.eq('#1-2', 0, w.wordIndexOf(1));
 		test.eq('#1-3', 0, w.wordIndexOf(2));
+		test.eq('#1-4', 0, w.wordIndexOf(3));
+		test.eq('#1-5', 1, w.wordIndexOf(4));
 
 		test.eq('#2-1', 3, w.wordIndexOf(12));
 		test.eq('#2-2', 4, w.wordIndexOf(13));
