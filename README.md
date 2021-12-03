@@ -40,140 +40,163 @@ let words1 = Unistring.getWords('The quick (“brown”) fox can’t jump 32.3 f
 /*
 words1 = [
  {
-  "text": "The",
-  "index": 0,
-  "length": 3,
-  "type": 12
+  "text": "The",	// fragment of the target text
+  "index": 0,		// start index, in grapheme unit
+  "rawIndex": 0,	// start index, in UTF-16 unit
+  "length": 3,		// length of graphemes
+  "type": 12		// internal class value
  },
  {
   "text": " ",
   "index": 3,
+  "rawIndex": 3,
   "length": 1,
   "type": 19
  },
  {
   "text": "quick",
   "index": 4,
+  "rawIndex": 4,
   "length": 5,
   "type": 12
  },
  {
   "text": " ",
   "index": 9,
+  "rawIndex": 9,
   "length": 1,
   "type": 19
  },
  {
   "text": "(",
   "index": 10,
+  "rawIndex": 10,
   "length": 1,
   "type": 0
  },
  {
   "text": "“",
   "index": 11,
+  "rawIndex": 11,
   "length": 1,
   "type": 0
  },
  {
   "text": "brown",
   "index": 12,
+  "rawIndex": 12,
   "length": 5,
   "type": 12
  },
  {
   "text": "”",
   "index": 17,
+  "rawIndex": 17,
   "length": 1,
   "type": 0
  },
  {
   "text": ")",
   "index": 18,
+  "rawIndex": 18,
   "length": 1,
   "type": 0
  },
  {
   "text": " ",
   "index": 19,
+  "rawIndex": 19,
   "length": 1,
   "type": 19
  },
  {
   "text": "fox",
   "index": 20,
+  "rawIndex": 20,
   "length": 3,
   "type": 12
  },
  {
   "text": " ",
   "index": 23,
+  "rawIndex": 23,
   "length": 1,
   "type": 19
  },
  {
   "text": "can’t",
   "index": 24,
+  "rawIndex": 24,
   "length": 5,
   "type": 12
  },
  {
   "text": " ",
   "index": 29,
+  "rawIndex": 29,
   "length": 1,
   "type": 19
  },
  {
   "text": "jump",
   "index": 30,
+  "rawIndex": 30,
   "length": 4,
   "type": 12
  },
  {
   "text": " ",
   "index": 34,
+  "rawIndex": 34,
   "length": 1,
   "type": 19
  },
  {
   "text": "32.3",
   "index": 35,
+  "rawIndex": 35,
   "length": 4,
   "type": 16
  },
  {
   "text": " ",
   "index": 39,
+  "rawIndex": 39,
   "length": 1,
   "type": 19
  },
  {
   "text": "feet",
   "index": 40,
+  "rawIndex": 40,
   "length": 4,
   "type": 12
  },
  {
   "text": ",",
   "index": 44,
+  "rawIndex": 44,
   "length": 1,
   "type": 14
  },
  {
   "text": " ",
   "index": 45,
+  "rawIndex": 45,
   "length": 1,
   "type": 19
  },
  {
   "text": "right",
   "index": 46,
+  "rawIndex": 46,
   "length": 5,
   "type": 12
  },
  {
   "text": "?",
   "index": 51,
+  "rawIndex": 51,
   "length": 1,
   "type": 0
  }
@@ -188,36 +211,42 @@ words2 = [
  {
   "text": "//",
   "index": 0,
+  "rawIndex": 0,
   "length": 2,
   "type": 0
  },
  {
   "text": " ",
   "index": 2,
+  "rawIndex": 2,
   "length": 1,
   "type": 19
  },
  {
   "text": "漢字",
   "index": 3,
+  "rawIndex": 3,
   "length": 2,
   "type": 0
  },
  {
   "text": "カタカナ",
   "index": 5,
+  "rawIndex": 5,
   "length": 4,
   "type": 20
  },
  {
   "text": "ひらがな",
   "index": 9,
+  "rawIndex": 9,
   "length": 4,
   "type": 21
  },
  {
   "text": "1.23",
   "index": 13,
+  "rawIndex": 13,
   "length": 4,
   "type": 16
  }
@@ -234,26 +263,30 @@ sentences = [
  {
   "text": "ある日の事でございます。",
   "index": 0,
+  "rawIndex": 0,
   "length": 12,
-  "type": 14
+  "type": 11
  },
  {
   "text": "御釈迦様は極楽の蓮池のふちを、独りでぶらぶら御歩きになっていらっしゃいました。",
   "index": 12,
+  "rawIndex": 12,
   "length": 39,
-  "type": 14
+  "type": 11
  },
  {
   "text": "He said, “Are you going?”  ",
   "index": 51,
+  "rawIndex": 51,
   "length": 27,
-  "type": 8
+  "type": 10
  },
  {
   "text": "John shook his head.",
   "index": 78,
+  "rawIndex": 78,
   "length": 20,
-  "type": 13
+  "type": 10
  }
 ]
  */

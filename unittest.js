@@ -320,11 +320,11 @@ const tests = {
 		test.eq('#4-4', 3, w[3].length);
 		test.eq('#4-5', 3, w[4].length);
 
-		test.eq('#5-1', Unistring.WBP.Other, w[0].type);
+		test.eq('#5-1', Unistring.WBP.Other, w[0].type);		// is prop of '!'
 		test.eq('#5-2', Unistring.WBP.WSegSpace, w[1].type);
-		test.eq('#5-3', Unistring.WBP.MidNumLet, w[2].type);
+		test.eq('#5-3', Unistring.WBP.Other, w[2].type);		// is prop of '#'
 		test.eq('#5-4', Unistring.WBP.WSegSpace, w[3].type);
-		test.eq('#5-5', Unistring.WBP.ExtendNumLet, w[4].type);
+		test.eq('#5-5', Unistring.WBP.Other, w[4].type);		// is prop of '&'
 	},
 	testGetWordsWithEastAsianScript: function (test) {
 		const w = Unistring.getWords('漢字かな交じりの文', true);
@@ -337,18 +337,27 @@ const tests = {
 		test.eq('#2-5', '文',     w[4].text);
 	},
 	testWordIndexOf: function (test) {
-		const w = Unistring.getWords('!@#   #+.   &*_', true);
+		/*
+		 * [
+		 *   { text: '🍔@#', index: 0, rawIndex: 0, length: 3, type: 23 },
+		 *   { text: '   ', index: 3, rawIndex: 4, length: 3, type: 19 },
+		 *   { text: '#+.', index: 6, rawIndex: 7, length: 3, type: 0 },
+		 *   { text: '   ', index: 9, rawIndex: 10, length: 3, type: 19 },
+		 *   { text: '&*_', index: 12, rawIndex: 13, length: 3, type: 0 }
+		 * ]
+		 */
+		const w = Unistring.getWords('🍔@#   #+.   &*_', true);
 
 		test.eq('#1-1', 0, w.wordIndexOf(0));
 		test.eq('#1-2', 0, w.wordIndexOf(1));
 		test.eq('#1-3', 0, w.wordIndexOf(2));
 
-		test.eq('#2-1', 4, w.wordIndexOf(12));
+		test.eq('#2-1', 3, w.wordIndexOf(12));
 		test.eq('#2-2', 4, w.wordIndexOf(13));
 		test.eq('#2-3', 4, w.wordIndexOf(14));
 
 		test.eq('#3-1', -1, w.wordIndexOf(-1));
-		test.eq('#3-2', -1, w.wordIndexOf(15));
+		test.eq('#3-2', -1, w.wordIndexOf(16));
 		test.eq('#3-3', -1, w.wordIndexOf(-1000));
 		test.eq('#3-4', -1, w.wordIndexOf(1000));
 	},
@@ -389,7 +398,51 @@ const tests = {
 		expected.forEach((item, index) => {
 			let count = 1;
 			for (let i in item) {
-				test.eq(`#${index+1}-${count++}`, item[i], w[index][i]);
+				test.eq(`#${index+1}-${count++} (${i})`, item[i], w[index][i]);
+			}
+		});
+	},
+	testComplexEmojiWordBreaking: function (test) {
+		const w = Unistring.getWords('//👨‍👨‍👦日本語だよ🍩', true);
+
+		// expected result
+		const expected = [
+			{
+				text: '//👨‍👨‍👦',
+				index: 0,
+				rawIndex: 0,
+				length: 7,
+				type: 0 // WBP_Other
+			},
+			{
+				text: '日本語',
+				index: 7,
+				rawIndex: 10,
+				length: 3,
+				type: 0 // WBP_Other
+			},
+			{
+				text: 'だよ',
+				index: 10,
+				rawIndex: 13,
+				length: 2,
+				type: 21 // WBP_Hiragana
+			},
+			{
+				text: '🍩',
+				index: 12,
+				rawIndex: 15,
+				length: 1,
+				type: 23 // WBP_Extended_Pictographic
+			}
+		];
+
+		test.eq('#1', 4, w.length);
+
+		expected.forEach((item, index) => {
+			let count = 1;
+			for (let i in item) {
+				test.eq(`#${index+1}-${count++} (${i})`, item[i], w[index][i]);
 			}
 		});
 	},

@@ -213,6 +213,12 @@ const GBP_NAMES = Object.keys(GBP);
 // >>>
 
 /*
+ * While a property defined for splitting, specially assign a value for Extended_Pictographic
+ */
+
+GBP['Extended_Pictographic'] = 16;	/* p */
+
+/*
  * data table, taken from:
  * http://www.unicode.org/Public/14.0.0/ucd/auxiliary/WordBreakProperty.txt
  */
@@ -382,6 +388,12 @@ const WBP_NAMES = Object.keys(WBP);
 
 // GENERATED CODE END
 // >>>
+
+/*
+ * While a property defined for splitting, specially assign a value for Extended_Pictographic
+ */
+
+WBP['Extended_Pictographic'] = 23;	/* w */
 
 /*
  * data table, taken from:
@@ -1032,10 +1044,10 @@ const SCRIPT_NAMES = Object.keys(SCRIPT);
  * variables
  */
 
-const graphemeFinder = createFinder(
-	GRAPHEME_BREAK_PROPS, GRAPHEME_BREAK_PROP_UNIT_LENGTH, GBP.Other);
-const wordFinder = createFinder(
-	WORD_BREAK_PROPS, WORD_BREAK_PROP_UNIT_LENGTH, WBP.Other);
+const graphemeFinder = createFinderWithEmoji(
+	GRAPHEME_BREAK_PROPS, GRAPHEME_BREAK_PROP_UNIT_LENGTH, GBP.Other, GBP_NAMES.length);
+const wordFinder = createFinderWithEmoji(
+	WORD_BREAK_PROPS, WORD_BREAK_PROP_UNIT_LENGTH, WBP.Other, WBP_NAMES.length);
 const sentenceFinder = createFinder(
 	SENTENCE_BREAK_PROPS, SENTENCE_BREAK_PROP_UNIT_LENGTH, SBP.Other);
 const scriptFinder = createFinder(
@@ -1091,16 +1103,7 @@ function buildGraphemeClusters (codePoints) {
 	let rawIndex = 0;
 	let i = 0;
 	for (let goal = codePoints.length; i < goal; i++) {
-		// special preparation for GB11 rule:
-		// assign 'E' for \p{Extended_Pictographic}
-		let nextProp;
-		if (/^\p{Extended_Pictographic}$/u.test(String.fromCodePoint(codePoints[i]))) {
-			nextProp = 'E';
-		}
-		else {
-			nextProp = String.fromCharCode(CODE_OFFSET + graphemeFinder(codePoints[i]));
-		}
-
+		const nextProp = String.fromCharCode(CODE_OFFSET + graphemeFinder(codePoints[i]));
 		if (canBreak(propString, nextProp)) {
 			if (prevIndex < i) {
 				const grapheme = new Grapheme(codePoints.slice(prevIndex, i), rawIndex);
@@ -1130,15 +1133,9 @@ function buildWordClusters (codePoints, useScripts) {
 	let prevIndex = 0;
 	let prevProps = '';
 	let nextProps = codePoints.map(cp => {
-		// special preparation for WB3c rule:
-		// assign 'E' for \p{Extended_Pictographic}
-		if (/^\p{Extended_Pictographic}$/u.test(String.fromCodePoint(cp))) {
-			return 'E';
-		}
-		else {
-			return String.fromCharCode(CODE_OFFSET + wordFinder(cp));
-		}
+		return String.fromCharCode(CODE_OFFSET + wordFinder(cp));
 	}).join('') + String.fromCharCode(CODE_OFFSET + WBP.EOT);
+	let rawIndex = 0;
 
 	for (
 		let i = 0, goal = nextProps.length;
@@ -1149,12 +1146,15 @@ function buildWordClusters (codePoints, useScripts) {
 		if (useScripts && i > 0 && isInScriptWord(prevProps, nextProps, codePoints[i - 1], codePoints[i])) continue;
 
 		if (prevIndex < i) {
+			const text = codePoints.slice(prevIndex, i).map(getUTF16FromCodePoint).join('');
 			result.push({
-				text: codePoints.slice(prevIndex, i).map(getUTF16FromCodePoint).join(''),
+				text,
 				index: prevIndex,
+				rawIndex,
 				length: i - prevIndex,
-				type: prevProps.substr(-1).charCodeAt(0) - CODE_OFFSET
+				type: prevProps.charCodeAt(prevIndex) - CODE_OFFSET
 			});
+			rawIndex += text.length;
 		}
 
 		prevIndex = i;
@@ -1172,6 +1172,7 @@ function buildSentenceClusters (codePoints) {
 	let nextProps = codePoints.map(cp => {
 		return String.fromCharCode(CODE_OFFSET + sentenceFinder(cp));
 	}).join('') + String.fromCharCode(CODE_OFFSET + SBP.EOT);
+	let rawIndex = 0;
 
 	for (
 		let i = 0, goal = nextProps.length;
@@ -1181,12 +1182,15 @@ function buildSentenceClusters (codePoints) {
 		if (!canBreakSentence(prevProps, nextProps)) continue;
 
 		if (prevIndex < i) {
+			const text = codePoints.slice(prevIndex, i).map(getUTF16FromCodePoint).join('');
 			result.push({
-				text: codePoints.slice(prevIndex, i).map(getUTF16FromCodePoint).join(''),
+				text,
 				index: prevIndex,
+				rawIndex,
 				length: i - prevIndex,
-				type: prevProps.substr(-1).charCodeAt(0) - CODE_OFFSET
+				type: prevProps.charCodeAt(prevIndex) - CODE_OFFSET
 			});
+			rawIndex += text.length;
 		}
 
 		prevIndex = i;
@@ -1229,6 +1233,23 @@ function createFinder (table, units, otherValue) {
 		}
 		else {
 			return cache[cp] = find(cp, table, units, otherValue);
+		}
+	};
+}
+
+function createFinderWithEmoji (table, units, otherValue, emojiValue) {
+	const cache = {};
+	return cp => {
+		if (cp in cache) {
+			return cache[cp];
+		}
+		else {
+			if (/^\p{Extended_Pictographic}$/u.test(String.fromCodePoint(cp))) {
+				return cache[cp] = emojiValue;
+			}
+			else {
+				return cache[cp] = find(cp, table, units, otherValue);
+			}
 		}
 	};
 }
@@ -1292,7 +1313,7 @@ function canBreak (prev, next) {
 
 	// Do not break within emoji modifier sequences or emoji zwj sequences.
 	//   GB11: \p{Extended_Pictographic} Extend* ZWJ  ×  \p{Extended_Pictographic}
-	if (/Eg*o$/u.test(prev) && next == 'E') return false;
+	if (/pg*o$/u.test(prev) && next == 'p') return false;
 
 	// Do not break within emoji flag sequences. That is, do not break
 	// between regional indicator (RI) symbols if there is an odd number of
@@ -1339,20 +1360,20 @@ function getCodePointString (cp, type) {
 	return result;
 }
 
-function wordIndexOf (index) {
+function wordIndexOf (utf16Index) {
 	let left = 0, right = this.length - 1;
 	let middle, rawIndex, length;
 
 	while (left <= right) {
 		middle = ((left + right) / 2) >> 0;
 
-		rawIndex = this[middle].index;
+		rawIndex = this[middle].rawIndex;
 		length = this[middle].length;
 
-		if (rawIndex + length - 1 < index) {
+		if (rawIndex + length - 1 < utf16Index) {
 			left = middle + 1;
 		}
-		else if (index < rawIndex) {
+		else if (utf16Index < rawIndex) {
 			right = middle - 1;
 		}
 		else {
@@ -1400,7 +1421,7 @@ function canBreakWord (prev, next) {
 
 	// Do not break within emoji zwj sequences.
 	//   WB3c: ZWJ  ×  \p{Extended_Pictographic}
-	if (endsWith(prev, 'r') && startsWith(next, 'E')) return false;
+	if (endsWith(prev, 'r') && startsWith(next, 'w')) return false;
 
 	// Keep horizontal whitespace together.
 	//   WB3d: WSegSpace  ×  WSegSpace
