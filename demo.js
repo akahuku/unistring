@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import minimist from 'minimist';
 import Unistring from './unistring.js';
 
@@ -14,7 +14,8 @@ const args = minimist(process.argv.slice(2), {
 		'grapheme-prop',
 		'word-prop',
 		'sentence-prop',
-		'script-prop'
+		'script-prop',
+		'fold'
 	],
 	alias: {
 		'grapheme': 'g',
@@ -59,55 +60,109 @@ function main () {
 	}
 	else if ('grapheme-prop' in args && args['grapheme-prop'] != '') {
 		const arg = args['grapheme-prop'];
-		const codePoint = /^u\+([0-9a-f]+)$/i.test(arg) ?
-			parseInt(RegExp.$1, 16) : arg.codePointAt(0);
-		const prop = Unistring.getGraphemeBreakProp(codePoint);
-		const propString = pick(Unistring.GBP, prop);
+		const codePoints = [];
 
-		console.log([
-			`grapheme break property value for`,
-			`${Unistring.getCodePointString(codePoint, 'unicode')} "${String.fromCodePoint(codePoint)}" is`,
-			`${prop} (Unistring.GBP.${propString})`
-		].join(' '));
+		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
+			codePoints.push(parseInt(RegExp.$1, 16));
+		}
+		else {
+			Unistring(arg).forEach(cluster => {
+				codePoints.push(...cluster.codePoints);
+			});
+		}
+
+		for (const cp of codePoints) {
+			const prop = Unistring.getGraphemeBreakProp(cp);
+			const propString = pick(Unistring.GBP, prop);
+
+			console.log([
+				`grapheme break property value for`,
+				`${Unistring.getCodePointString(cp, 'unicode')} "${String.fromCodePoint(cp)}" is`,
+				`${prop} (Unistring.GBP.${propString})`
+			].join(' '));
+		}
 	}
 	else if ('word-prop' in args && args['word-prop'] != '') {
 		const arg = args['word-prop'];
-		const codePoint = /^u\+([0-9a-f]+)$/i.test(arg) ?
-			parseInt(RegExp.$1, 16) : arg.codePointAt(0);
-		const prop = Unistring.getWordBreakProp(codePoint);
-		const propString = pick(Unistring.WBP, prop);
+		const codePoints = [];
 
-		console.log([
-			`word break property value for`,
-			`${Unistring.getCodePointString(codePoint, 'unicode')} "${String.fromCodePoint(codePoint)}" is`,
-			`${prop} (Unistring.WBP.${propString})`
-		].join(' '));
+		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
+			codePoints.push(parseInt(RegExp.$1, 16));
+		}
+		else {
+			Unistring(arg).forEach(cluster => {
+				codePoints.push(...cluster.codePoints);
+			});
+		}
+
+		for (const cp of codePoints) {
+			const prop = Unistring.getWordBreakProp(cp);
+			const propString = pick(Unistring.WBP, prop);
+
+			console.log([
+				`word break property value for`,
+				`${Unistring.getCodePointString(cp, 'unicode')} "${String.fromCodePoint(cp)}" is`,
+				`${prop} (Unistring.WBP.${propString})`
+			].join(' '));
+		}
 	}
 	else if ('sentence-prop' in args && args['sentence-prop'] != '') {
 		const arg = args['sentence-prop'];
-		const codePoint = /^u\+([0-9a-f]+)$/i.test(arg) ?
-			parseInt(RegExp.$1, 16) : arg.codePointAt(0);
-		const prop = Unistring.getSentenceBreakProp(codePoint);
-		const propString = pick(Unistring.SBP, prop);
+		const codePoints = [];
 
-		console.log([
-			`sentence break property value for`,
-			`${Unistring.getCodePointString(codePoint, 'unicode')} "${String.fromCodePoint(codePoint)}" is`,
-			`${prop} (Unistring.SBP.${propString})`
-		].join(' '));
+		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
+			codePoints.push(parseInt(RegExp.$1, 16));
+		}
+		else {
+			Unistring(arg).forEach(cluster => {
+				codePoints.push(...cluster.codePoints);
+			});
+		}
+
+		for (const cp of codePoints) {
+			const prop = Unistring.getSentenceBreakProp(cp);
+			const propString = pick(Unistring.SBP, prop);
+
+			console.log([
+				`sentence break property value for`,
+				`${Unistring.getCodePointString(cp, 'unicode')} "${String.fromCodePoint(cp)}" is`,
+				`${prop} (Unistring.SBP.${propString})`
+			].join(' '));
+		}
 	}
 	else if ('script-prop' in args && args['script-prop'] != '') {
 		const arg = args['script-prop'];
-		const codePoint = /^u\+([0-9a-f]+)$/i.test(arg) ?
-			parseInt(RegExp.$1, 16) : arg.codePointAt(0);
-		const prop = Unistring.getScriptProp(codePoint);
-		const propString = pick(Unistring.SCRIPT, prop);
+		const codePoints = [];
 
-		console.log([
-			`script property value for`,
-			`${Unistring.getCodePointString(codePoint, 'unicode')} "${String.fromCodePoint(codePoint)}" is`,
-			`${prop} (Unistring.SCRIPT.${propString})`
-		].join(' '));
+		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
+			codePoints.push(parseInt(RegExp.$1, 16));
+		}
+		else {
+			Unistring(arg).forEach(cluster => {
+				codePoints.push(...cluster.codePoints);
+			});
+		}
+
+		for (const cp of codePoints) {
+			const prop = Unistring.getScriptProp(cp);
+			const propString = pick(Unistring.SCRIPT, prop);
+
+			console.log([
+				`script property value for`,
+				`${Unistring.getCodePointString(cp, 'unicode')} "${String.fromCodePoint(cp)}" is`,
+				`${prop} (Unistring.SCRIPT.${propString})`
+			].join(' '));
+		}
+	}
+	else if ('fold' in args && args['fold'] != '') {
+		const arg = args['fold'];
+		const lines = Unistring.getFoldedLines(arg);
+		console.dir(Unistring.getLineBreakableClusters(arg));
+		console.log();
+		console.log('-'.repeat(80));
+		for (const line of lines) {
+			console.log(line.replace(/[\s\r\n]+$/, ''));
+		}
 	}
 	else {
 		console.log([
@@ -127,7 +182,11 @@ function main () {
 			'',
 			'options for retrieving script properties:',
 			'  --script=<argument>',
-			'   * argument is arbitrary string or "U+XXXXXX"'
+			'   * argument is arbitrary string or "U+XXXXXX"',
+			'',
+			'options for text folding:',
+			'  --fold=<argument>'
+			'   * argument is arbitrary string',
 		].join('\n'));
 	}
 

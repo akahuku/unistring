@@ -4,18 +4,44 @@
  * ================
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import Unistring from './unistring.js';
 import testRunner from './test/testRunner.js';
+import {loadFiles, fileExists} from './utils.js';
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const UNICODE_VERSION = fs.readFileSync(path.join(__dirname, 'unicode-version'), 'utf8').replace(/^[\s\r\n]+|[\s\r\n]+$/g, '');
+const TEST_DIR = path.join(__dirname, 'test', UNICODE_VERSION, '/');
+const TEST_FILES = [
+	{
+		url: `http://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/GraphemeBreakProperty.txt`,
+		path: TEST_DIR
+	},
+	{
+		url: `http://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/GraphemeBreakTest.txt`,
+		path: TEST_DIR
+	},
+	{
+		url: `http://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/WordBreakTest.txt`,
+		path: TEST_DIR
+	},
+	{
+		url: `http://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/SentenceBreakTest.txt`,
+		path: TEST_DIR
+	},
+	{
+		url: `http://www.unicode.org/Public/${UNICODE_VERSION}/ucd/auxiliary/LineBreakTest.txt`,
+		path: TEST_DIR
+	}
+];
 
 const tests = {
-	testFind: function (test) {
+	testFind: test => {
 		readFileByLine(
-			__dirname + '/unicode-data/GraphemeBreakProperty.txt',
-			function (line, lineIndex) {
+			path.join(TEST_DIR, 'GraphemeBreakProperty.txt'),
+			(line, lineIndex) => {
 				let re = /^([0-9A-F]+)[^;]+;\s*(\S+)/.exec(line);
 				if (!re) return;
 
@@ -23,26 +49,23 @@ const tests = {
 				const codePointString = Unistring.getCodePointString(codePoint, 'unicode');
 				const code = Unistring.GBP[re[2]];
 				if (code == undefined) {
-					test.fail(
-						codePointString + ' failed:' +
-						' unknown property (' + re[2] + ')'
-					);
+					test.fail(`${codePointString} failed: unknown property (${re[2]})`);
 					return;
 				}
 
 				const result = Unistring.getGraphemeBreakProp(codePoint);
-				test.eq('line ' + (lineIndex + 1) + ': ' + re[1], code, result);
+				test.eq(`line ${lineIndex}: ${re[1]}`, code, result);
 			},
-			function () {
+			() => {
 				test.done();
 			}
 		);
 		return false;
 	},
-	testGraphemeBreak: function (test) {
+	testGraphemeBreak: test => {
 		readFileByLine(
-			__dirname + '/test/GraphemeBreakTest.txt',
-			function (line, lineIndex) {
+			path.join(TEST_DIR, 'GraphemeBreakTest.txt'),
+			(line, lineIndex) => {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
 				if (!/^÷ .+ ÷$/.test(line)) return;
@@ -56,19 +79,19 @@ const tests = {
 				});
 
 				const result = (new Unistring(testString)).dump();
-				test.eq('line ' + (lineIndex + 1), line, result);
+				test.eq(`line ${lineIndex}`, line, result);
 			},
-			function () {
+			() => {
 				test.done();
 			}
 		);
 		return false;
 	},
-	testToString: function (test) {
+	testToString: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1', 'か\u3099き\u3099く\u3099け\u3099こ\u3099', s.toString());
 	},
-	testDelete: function (test) {
+	testDelete: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-0', 0, s.rawIndexAt(0));
 		test.eq('#1-1', 2, s.rawIndexAt(1));
@@ -96,7 +119,7 @@ const tests = {
 		test.eq('#5-0', 0, s.length);
 		test.eq('#5-1', '', s.toString());
 	},
-	testInsert: function (test) {
+	testInsert: test => {
 		const s = new Unistring('foobar');
 
 		s.insert('BAZ', 0);
@@ -112,13 +135,13 @@ const tests = {
 		s.insert('FOO', s.length);
 		test.eq('#4-1', 'BAZfooBAXbaBAQrFOO', s.toString());
 	},
-	testCodePointsAt: function (test) {
+	testCodePointsAt: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', '[12365,12441]', JSON.stringify(s.codePointsAt(1)));
 
 		test.done();
 	},
-	testRawStringAt: function (test) {
+	testRawStringAt: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 'か\u3099', s.rawStringAt(0));
 		test.eq('#1-2', 'き\u3099', s.rawStringAt(1));
@@ -127,7 +150,7 @@ const tests = {
 		test.eq('#1-5', 'こ\u3099', s.rawStringAt(4));
 		test.eq('#1-6', '',         s.rawStringAt(5));
 	},
-	testRawIndexAt: function (test) {
+	testRawIndexAt: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 0, s.rawIndexAt(0));
 		test.eq('#1-2', 2, s.rawIndexAt(1));
@@ -136,7 +159,7 @@ const tests = {
 		test.eq('#1-5', 8, s.rawIndexAt(4));
 		test.eq('#1-6', 10, s.rawIndexAt(5));
 	},
-	testForEach: function (test) {
+	testForEach: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		let result = '';
 		s.forEach(g => {
@@ -144,7 +167,7 @@ const tests = {
 		});
 		test.eq('#1-1', 'かきくけこ', result);
 	},
-	testGetClusterIndexFromUTF16Index: function (test) {
+	testGetClusterIndexFromUTF16Index: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		test.eq('#1-1', 0, s.getClusterIndexFromUTF16Index(0));
 		test.eq('#1-2', 0, s.getClusterIndexFromUTF16Index(1));
@@ -157,7 +180,7 @@ const tests = {
 		test.eq('#1-9', 4, s.getClusterIndexFromUTF16Index(8));
 		test.eq('#1-10', 4, s.getClusterIndexFromUTF16Index(9));
 	},
-	testLength: function (test) {
+	testLength: test => {
 		const s = new Unistring(
 			// ZALGO!
 			'\u005a\u0351\u036b\u0343\u036a\u0302\u036b\u033d\u034f\u0334\u0319\u0324\u031e\u0349\u035a\u032f\u031e\u0320\u034d' +
@@ -169,7 +192,7 @@ const tests = {
 		);
 		test.eq('#1', 6, s.length);
 	},
-	testCharAt: function (test) {
+	testCharAt: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', 'か', s.charAt(0));
@@ -181,7 +204,7 @@ const tests = {
 		test.eq('#2-1', '', s.charAt(-1));
 		test.eq('#2-2', '', s.charAt(100));
 	},
-	testCharCodeAt: function (test) {
+	testCharCodeAt: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', 12363, s.charCodeAt(0));
@@ -193,7 +216,7 @@ const tests = {
 		test.t('#2-1', isNaN(s.charCodeAt(-1)));
 		test.t('#2-2', isNaN(s.charCodeAt(100)));
 	},
-	testSubstring: function (test) {
+	testSubstring: test => {
 		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		let s2 = s1.substring(1, 4);
 		test.eq('#1-1', 'き\u3099く\u3099け\u3099', s2.toString());
@@ -204,7 +227,7 @@ const tests = {
 		s2 = s1.substring();
 		test.eq('#3-1', 'か\u3099き\u3099く\u3099け\u3099こ\u3099', s2.toString());
 	},
-	testSubstr: function (test) {
+	testSubstr: test => {
 		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		let s2 = s1.substr(1, 2);
 		test.eq('#1-1', 'き\u3099く\u3099', s2.toString());
@@ -221,7 +244,7 @@ const tests = {
 		s2 = s1.substr(-1);
 		test.eq('#5-1', 'こ\u3099', s2.toString());
 	},
-	testSlice: function (test) {
+	testSlice: test => {
 		const s1 = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 		let s2 = s1.slice(1, 4);
 		test.eq('#1-1', 'き\u3099く\u3099け\u3099', s2.toString());
@@ -238,7 +261,7 @@ const tests = {
 		s2 = s1.slice(-1);
 		test.eq('#4-1', 'こ\u3099', s2.toString());
 	},
-	testConcat: function (test) {
+	testConcat: test => {
 		const s = Unistring('foo');
 		s.concat(Unistring('bar'));
 
@@ -250,24 +273,24 @@ const tests = {
 		test.eq('#1-6', 4, s.rawIndexAt(4));
 		test.eq('#1-7', 5, s.rawIndexAt(5));
 	},
-	testIndexOf: function (test) {
+	testIndexOf: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', -1, s.indexOf('か'));
 		test.eq('#1-2', -1, s.indexOf('\u3099'));
 		test.eq('#1-3', 4, s.indexOf('こ\u3099'));
 	},
-	testLastIndexOf: function (test) {
+	testLastIndexOf: test => {
 		const s = new Unistring('か\u3099き\u3099く\u3099け\u3099こ\u3099');
 
 		test.eq('#1-1', -1, s.lastIndexOf('か'));
 		test.eq('#1-2', -1, s.lastIndexOf('\u3099'));
 		test.eq('#1-3', 1, s.lastIndexOf('き\u3099'));
 	},
-	testGetWords: function (test) {
+	testGetWords: test => {
 		readFileByLine(
-			__dirname + '/test/WordBreakTest.txt',
-			function (line, lineIndex) {
+			path.join(TEST_DIR, 'WordBreakTest.txt'),
+			(line, lineIndex) => {
 				line = line.replace(/#.*$/, '');
 				line = line.replace(/^\s+|\s+$/g, '');
 				if (!/^÷ .+ ÷$/.test(line)) return;
@@ -290,15 +313,15 @@ const tests = {
 				});
 				result = '÷ ' + result.join(' ÷ ') + ' ÷';
 
-				test.eq('line ' + (lineIndex + 1), line, result);
+				test.eq(`line ${lineIndex}`, line, result);
 			},
-			function () {
+			() => {
 				test.done();
 			}
 		);
 		return false;
 	},
-	testGetWordsWithScript: function (test) {
+	testGetWordsWithScript: test => {
 		const w = Unistring.getWords('!@#   #+.   &*_', true);
 		test.eq('#1-1', 5, w.length);
 
@@ -326,7 +349,7 @@ const tests = {
 		test.eq('#5-4', Unistring.WBP.WSegSpace, w[3].type);
 		test.eq('#5-5', Unistring.WBP.Other, w[4].type);		// is prop of '&'
 	},
-	testGetWordsWithEastAsianScript: function (test) {
+	testGetWordsWithEastAsianScript: test => {
 		const w = Unistring.getWords('漢字かな交じりの文', true);
 		test.eq('#1-1', 5, w.length);
 
@@ -336,7 +359,7 @@ const tests = {
 		test.eq('#2-4', 'じりの', w[3].text);
 		test.eq('#2-5', '文',     w[4].text);
 	},
-	testWordIndexOf: function (test) {
+	testWordIndexOf: test => {
 		/*
 		 * [
 		 *   { text: '🍔@#', index: 0, rawIndex: 0, length: 3, type: 23 },
@@ -363,7 +386,7 @@ const tests = {
 		test.eq('#3-3', -1, w.wordIndexOf(-1000));
 		test.eq('#3-4', -1, w.wordIndexOf(1000));
 	},
-	testComplexWordBreaking: function (test) {
+	testComplexWordBreaking: test => {
 		const w = Unistring.getWords(String.fromCodePoint(
 			0x0061, 0x1F1E6, 0x200D, 0x1F1E7, 0x1F1E8, 0x0062));
 
@@ -404,7 +427,7 @@ const tests = {
 			}
 		});
 	},
-	testComplexEmojiWordBreaking: function (test) {
+	testComplexEmojiWordBreaking: test => {
 		const w = Unistring.getWords('//👨‍👨‍👦日本語だよ🍩', true);
 
 		// expected result
@@ -448,7 +471,7 @@ const tests = {
 			}
 		});
 	},
-	testToLowerCase: function (test) {
+	testToLowerCase: test => {
 		const s1 = new Unistring('ABC あいうえお');
 		const s2 = s1.toLowerCase();
 
@@ -460,7 +483,7 @@ const tests = {
 		test.eq('#2-1', 'ABC あいうえお', s1.toString());
 		test.eq('#2-2', 'abc あいうえお', s3.toString());
 	},
-	testToUpperCase: function (test) {
+	testToUpperCase: test => {
 		const s1 = new Unistring('abc あいうえお');
 		const s2 = s1.toUpperCase();
 
@@ -472,56 +495,211 @@ const tests = {
 		test.eq('#2-1', 'abc あいうえお', s1.toString());
 		test.eq('#2-2', 'ABC あいうえお', s3.toString());
 	},
-	testGetSentences: function (test) {
+	testGetSentences: test => {
 		readFileByLine(
-			__dirname + '/test/SentenceBreakTest.txt',
-			function (line, lineIndex) {
-				line = line.replace(/#.*$/, '');
-				line = line.replace(/^\s+|\s+$/g, '');
-				if (!/^÷ .+ ÷$/.test(line)) return;
+			path.join(TEST_DIR, 'SentenceBreakTest.txt'),
+			(line, lineIndex) => {
+				let expectedLine = line;
+				expectedLine = expectedLine.replace(/#.*$/, '');
+				expectedLine = expectedLine.replace(/^\s+|\s+$/g, '');
+				if (!/^÷ .+ ÷$/.test(expectedLine)) return;
 
 				let testString = '';
-				line.replace(/[0-9A-F]+/g, $0 => {
+				expectedLine.replace(/[0-9A-F]+/g, $0 => {
 					testString += Unistring.getUTF16FromCodePoint(
 						parseInt($0, 16)
 					);
 					return $0;
 				});
 
-				let result = [];
+				let actualLine = [];
 				Unistring.getSentences(testString).forEach(sentence => {
 					const tmp = [];
 					Unistring(sentence.text).forEach(cluster => {
 						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
 					});
-					result.push(tmp.join(' × '));
+					actualLine.push(tmp.join(' × '));
 				});
-				result = '÷ ' + result.join(' ÷ ') + ' ÷';
+				actualLine = `÷ ${actualLine.join(' ÷ ')} ÷`;
 
-				test.eq('line ' + (lineIndex + 1), line, result);
+				test.eq(`line ${lineIndex}`, expectedLine, actualLine);
 			},
-			function () {
+			() => {
 				test.done();
 			}
 		);
 		return false;
+	},
+	testGetLineBreakableClusters: test => {
+		readFileByLine(
+			path.join(TEST_DIR, 'LineBreakTest.txt'),
+			(line, lineIndex) => {
+				let expectedLine = line;
+				expectedLine = expectedLine.replace(/#.*$/, '');
+				expectedLine = expectedLine.replace(/^\s+|\s+$/g, '');
+				if (!/^[÷×] .+ [÷×]$/.test(expectedLine)) return;
+
+				let testString = '';
+				expectedLine.replace(/[0-9A-F]+/g, $0 => {
+					testString += Unistring.getUTF16FromCodePoint(
+						parseInt($0, 16)
+					);
+					return $0;
+				});
+
+				let actualLine = [];
+				const result = Unistring.getLineBreakableClusters(testString);
+				result.forEach(cluster => {
+					const tmp = [];
+					Unistring(cluster.text).forEach(cluster => {
+						tmp.push.apply(tmp, cluster.codePoints.map(Unistring.getCodePointString));
+					});
+					actualLine.push(tmp.join(' × '));
+				});
+				actualLine = `× ${actualLine.join(' ÷ ')} ÷`;
+
+				if (expectedLine != actualLine) {
+					console.dir(result);
+				}
+
+				test.eq(`line ${lineIndex}:\n${line.split('#', 2)[1]}`, expectedLine, actualLine);
+			},
+			() => {
+				test.done();
+			}
+		);
+		return false;
+	},
+	testGetColumnsFor: test => {
+		test.eq('#newtral',          5, Unistring.getColumnsFor('देवनागरी'));
+		test.eq('#ambiguous (1)',   10, Unistring.getColumnsFor('どうして…'));
+		test.eq('#ambiguous (2)',    9, Unistring.getColumnsFor('どうして…', {awidth: 1}));
+		test.eq('#narrow + combining marks',  7, Unistring.getColumnsFor('⦅a\u0302pple⦆'));
+		test.eq('#wide',            10, Unistring.getColumnsFor('あいうえお'));
+		test.eq('#half',             8, Unistring.getColumnsFor('ﾊﾝｶｸｶﾀｶﾅ'));
+		test.eq('#full',            12, Unistring.getColumnsFor('ＡＢＣ０１２'));
+	},
+	testGetFoldedLines: test => {
+		const s = `\
+ﾋｬｱ信は潔く負けを認めろ(H\u0308yar believers should accept defeat gracefully)
+お前らの大好きな日テレ版は視聴率低迷・社長逃亡で半年で打ち切り・資料の焼き捨て・原作者の忌避・声優からも白黒だったと間違えられる程度の作品 対するテレ朝版は日テレ版の失敗を研究した結果原作者に愛され毎年大長編が作られ途中でリニューアルしながら40年続く国民的アニメに成長 世間はつんつるてんのホイ来たサッサじゃなくて頭テカテカのホンワカパッパを選んだんだよ`;
+		const result = Unistring.getFoldedLines(s, {
+			columns: 50,
+			awidth: 1
+		});
+
+		test.eq( '#1', 'ﾋｬｱ信は潔く負けを認めろ(H\u0308yar believers should ', result[0]);
+		test.eq( '#2', 'accept defeat gracefully)\n', result[1]);
+		test.eq( '#3', 'お前らの大好きな日テレ版は視聴率低迷・社長逃亡で半', result[2]);
+		test.eq( '#4', '年で打ち切り・資料の焼き捨て・原作者の忌避・声優か', result[3]);
+		test.eq( '#5', 'らも白黒だったと間違えられる程度の作品 対するテレ', result[4]);
+		test.eq( '#6', '朝版は日テレ版の失敗を研究した結果原作者に愛され毎', result[5]);
+		test.eq( '#7', '年大長編が作られ途中でリニューアルしながら40年続く', result[6]);
+		test.eq( '#8', '国民的アニメに成長 世間はつんつるてんのホイ来た', result[7]);
+		test.eq( '#9', 'サッサじゃなくて頭テカテカのホンワカパッパを選んだ', result[8]);
+		test.eq('#10', 'んだよ', result[9]);
+	},
+	testGetFoldedLinesWithAnsi: test => {
+		const s = `\
+\u001b[1;91mﾋｬｱ信\u001b[mは潔く負けを認めろ(H\u0308yar believers should accept defeat gracefully)
+お前らの大好きな日テレ版は視聴率低迷・社長逃亡で半年で打ち切り・資料の焼き捨て・原作者の忌避・声優からも白黒だったと間違えられる程度の作品 対するテレ朝版は日テレ版の失敗を研究した結果原作者に愛され毎年大長編が作られ途中でリニューアルしながら40年続く国民的アニメに成長 世間はつんつるてんのホイ来たサッサじゃなくて頭テカテカの\u001b[4mホンワカパッパ\u001b[mを選んだんだよ`;
+		const result = Unistring.getFoldedLines(s, {
+			columns: 50,
+			awidth: 1,
+			ansi: true
+		});
+
+		test.eq( '#1', '\u001b[1;91mﾋｬｱ信\u001b[mは潔く負けを認めろ(H\u0308yar believers should ', result[0]);
+		test.eq( '#2', 'accept defeat gracefully)\n', result[1]);
+		test.eq( '#3', 'お前らの大好きな日テレ版は視聴率低迷・社長逃亡で半', result[2]);
+		test.eq( '#4', '年で打ち切り・資料の焼き捨て・原作者の忌避・声優か', result[3]);
+		test.eq( '#5', 'らも白黒だったと間違えられる程度の作品 対するテレ', result[4]);
+		test.eq( '#6', '朝版は日テレ版の失敗を研究した結果原作者に愛され毎', result[5]);
+		test.eq( '#7', '年大長編が作られ途中でリニューアルしながら40年続く', result[6]);
+		test.eq( '#8', '国民的アニメに成長 世間はつんつるてんのホイ来た', result[7]);
+		test.eq( '#9', 'サッサじゃなくて頭テカテカの\u001b[4mホンワカパッパ\u001b[mを選んだ', result[8]);
+		test.eq('#10', 'んだよ', result[9]);
+	},
+	testGetFoldedLinesWithEmoji: test => {
+		const s = '🐶🐺🐱🐭🐹🐰🐸🐯🐨🐻🐷🐽🐮🐗🐵🐒🐴🐑🐘🐼🐧🐦🐤🐥🐣🐔🐍🐢🐛🐝🐜🐞🐌🐙🐚🐠🐟🐬🐳🐋🐄🐏🐀🐃🐅🐇🐉🐎🐐🐓🐕🐖🐁🐂🐲🐡🐊🐫🐪🐆🐈🐩🐾💐🌸🌷🍀🌹🌻🌺🍁🍃🍂🌿🌾🍄🌵🌴🌲🌳🌰🌱🌼🌐🌞🌝🌚🌑🌒🌓🌔🌕🌖🌗🌘🌜🌛🌙🌍🌎🌏🌋🌌🌠⭐☀⛅☁⚡☔❄⛄🌀🌁🌈🌊';
+		const result = Unistring.getFoldedLines(s, {
+			columns: 50,
+			awidth: 1
+		});
+		test.eq('#1', '🐶🐺🐱🐭🐹🐰🐸🐯🐨🐻🐷🐽🐮🐗🐵🐒🐴🐑🐘🐼🐧🐦🐤🐥🐣', result[0]);
+		test.eq('#2', '🐔🐍🐢🐛🐝🐜🐞🐌🐙🐚🐠🐟🐬🐳🐋🐄🐏🐀🐃🐅🐇🐉🐎🐐🐓', result[1]);
+		test.eq('#3', '🐕🐖🐁🐂🐲🐡🐊🐫🐪🐆🐈🐩🐾💐🌸🌷🍀🌹🌻🌺🍁🍃🍂🌿🌾', result[2]);
+		test.eq('#4', '🍄🌵🌴🌲🌳🌰🌱🌼🌐🌞🌝🌚🌑🌒🌓🌔🌕🌖🌗🌘🌜🌛🌙🌍🌎', result[3]);
+		test.eq('#5', '🌏🌋🌌🌠⭐☀⛅☁⚡☔❄⛄🌀🌁🌈🌊', result[4]);
+	},
+	testGetFoldedLinesWithVeryLongLatin: test => {
+		const s = 'Loremipsumdolorsitametconsecteturadipiscingelitseddoeiusmodtemporincididuntutlaboreetdoloremagnaaliqua.Utenimadminimveniamquisnostrudexercitationullamcolaborisnisiutaliquipexeacommodoconsequat.Duisauteiruredolorinreprehenderitinvoluptatevelitessecillumdoloreeufugiatnullapariatur.Excepteursintoccaecatcupidatatnonproidentsuntinculpaquiofficiadeseruntmollitanimidestlaborum.';
+		const result = Unistring.getFoldedLines(s, {
+			columns: 50,
+			awidth: 1
+		});
+		test.eq('#1', 'Loremipsumdolorsitametconsecteturadipiscingelitsed', result[0]);
+		test.eq('#2', 'doeiusmodtemporincididuntutlaboreetdoloremagnaaliq', result[1]);
+		test.eq('#3', 'ua.Utenimadminimveniamquisnostrudexercitationullam', result[2]);
+		test.eq('#4', 'colaborisnisiutaliquipexeacommodoconsequat.Duisaut', result[3]);
+		test.eq('#5', 'eiruredolorinreprehenderitinvoluptatevelitessecill', result[4]);
+		test.eq('#6', 'umdoloreeufugiatnullapariatur.Excepteursintoccaeca', result[5]);
+		test.eq('#7', 'tcupidatatnonproidentsuntinculpaquiofficiadeserunt', result[6]);
+		test.eq('#8', 'mollitanimidestlaborum.', result[7]);
+	},
+	testDivideByColumns: test => {
+		const [left1, right1] = Unistring.divideByColumns('a\u0302pplejuice', 5);
+		test.eq('left #1', 'a\u0302pple', left1);
+		test.eq('right #1', 'juice', right1);
+
+		const [left2, right2] = Unistring.divideByColumns('a\u0302pplejuice', -5);
+		test.eq('left #2', '', left2);
+		test.eq('right #2', 'a\u0302pplejuice', right2);
+
+		const [left3, right3] = Unistring.divideByColumns('a\u0302pplejuice', 50);
+		test.eq('left #3', 'a\u0302pplejuice', left3);
+		test.eq('right #3', '', right3);
 	}
 };
 
 function readFileByLine (fileName, callback, callback2) {
-	fs.readFile(fileName, 'utf8', (err, data) => {
-		if (err) throw err;
-		data = data.split('\n');
-		for (let i = 0, goal = data.length; i < goal; i++) {
-			const result = callback(data[i], i);
+	const lines = fs.readFileSync(fileName, 'utf8').split('\n');
+	for (let i = 0, goal = lines.length; i < goal; i++) {
+		try {
+			const result = callback(lines[i], i + 1);
 			if (result === false) {
 				break;
 			}
 		}
-		callback2 && callback2();
-	});
+		catch (e) {
+			console.error(e.stack);
+			break;
+		}
+	}
+	callback2 && callback2();
 }
 
-testRunner.run(tests);
+if (!fileExists(TEST_DIR)) {
+	fs.mkdirSync(TEST_DIR);
+}
+
+loadFiles(TEST_FILES).then(() => {
+	process.argv.reduce((result, arg) => {
+		if (/^--test=(.+)/.test(arg)) {
+			const selectedTests = {};
+			RegExp.$1.split(/\s*,\s*/).forEach(test => {
+				if (test in tests) {
+					selectedTests[test] = tests[test];
+				}
+				else {
+					console.error(`Test "${test}" not found.`);
+				}
+			});
+			testRunner.run(selectedTests);
+			result++;
+		}
+		return result;
+	}, 0) || testRunner.run(tests);
+});
 
 // vim:set ts=4 sw=4 fenc=UTF-8 ff=unix ft=javascript fdm=marker fmr=<<<,>>> :

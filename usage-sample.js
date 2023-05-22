@@ -37,3 +37,17 @@ let sentences = Unistring.getSentences(
 	'He said, “Are you going?”  John shook his head.'
 );
 console.log('sentences = ' + JSON.stringify(sentences, null, ' '));
+
+//
+let foldedLines = Unistring.getFoldedLines(
+`On this unsatisfactory manner the penultimate message of Cavor dies out. One seems to see him away there in the blue obscurity amidst his apparatus intently signalling us to the last, all unaware of the curtain of confusion that drops between us; all unaware, too, of the final dangers that even then must have been creeping upon him. His disastrous want of vulgar common sense had utterly betrayed him. He had talked of war, he had talked of all the strength and irrational violence of men, of their insatiable aggressions, their tireless futility of conflict. He had filled the whole moon world with this impression of our race, and then I think it is plain that he made the most fatal admission that upon himself alone hung the possibility—at least for a long time—of any further men reaching the moon. The line the cold, inhuman reason of the moon would take seems plain enough to me, and a suspicion of it, and then perhaps some sudden sharp realisation of it, must have come to him. One imagines him about the moon with the remorse of this fatal indiscretion growing in his mind.  During a certain time I am inclined to guess the Grand Lunar was deliberating the new situation, and for all that time Cavor may have gone as free as ever he had gone. But obstacles of some sort prevented his getting to his electromagnetic apparatus again after that message I have just given. For some days we received nothing. Perhaps he was having fresh audiences, and trying to evade his previous admissions.  Who can hope to guess?
+
+And then suddenly, like a cry in the night, like a cry that is followed by a stillness, came the last message. It is the briefest fragment, the broken beginnings of two sentences.`, {
+	columns: 50,  // number of columns to fold. default is 80
+	awidth: 1     // columns of ambiguous characters in east asian script, 1 or 2. default is 1
+});
+console.log('foldedLines = ' + JSON.stringify(foldedLines, null, ' '));
+
+//
+let breakableClusters = Unistring.getLineBreakableClusters('テキストが多くの言語に対応した折り返し可能な位置で分割されます (The text is divided at the foldable position for many languages).');
+console.log('breakableClusters = ' + JSON.stringify(breakableClusters, null, ' '));

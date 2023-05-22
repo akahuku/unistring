@@ -4,7 +4,7 @@ Thumbs.db
 desktop.ini
 Session.vim
 node_modules
-package-lock.json
-unicode-data/*.txt
+unicode-data
 !unicode-data/WordBreakOverrides.txt
-test/*.txt
+test
+!test/testRunner.js
