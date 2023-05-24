@@ -2739,7 +2739,7 @@ function getFoldedLines (s, options = {}) {
 	let fetchClusters = fetchPlainClusters;
 
 	if (options.ansi && options.characterReference) {
-		fetchClusters = fetchAnsiCharReferenceClusters;
+		fetchClusters = fetchAnsiCharRefClusters;
 	}
 	else if (options.ansi) {
 		fetchClusters = fetchAnsiClusters;
@@ -2749,7 +2749,7 @@ function getFoldedLines (s, options = {}) {
 	}
 
 	while (s != '') {
-		const re = /^.+?\r?\n/.exec(s);
+		const re = /^.*?\r?\n/.exec(s);
 		let line;
 		if (re) {
 			line = re[0];
@@ -2785,9 +2785,7 @@ function getFoldedLines (s, options = {}) {
 			}
 		}
 
-		if (lineFragment.length) {
-			result.push(lineFragment);
-		}
+		result.push(lineFragment);
 	}
 
 	return result;

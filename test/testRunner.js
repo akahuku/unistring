@@ -43,8 +43,8 @@ function run (tests) {
 						this.failed++;
 						this.log.push(
 							`---- ${label}`,
-							`expected: ${expected}`,
-							`  actual: ${actual}`
+							`expected: ${expected}\u001b[m`,
+							`  actual: ${actual}\u001b[m`
 						);
 						if (this.stopOnFail) {
 							throw new Error('Stop on fail');
@@ -74,6 +74,7 @@ function run (tests) {
 						console.log(`\t${this.log.join('\n\t')}`);
 					}
 					testCount++;
+					console.log(`...${this.assertCount}`);
 					if (testCount >= availableTests.length) {
 						if (failedCount) {
 							console.log(
@@ -96,7 +97,7 @@ function run (tests) {
 				}
 			};
 			try {
-				console.log(t);
+				process.stdout.write(t);
 				const result = tests[t](tester);
 				result !== false && tester.done && tester.done();
 			}

@@ -3,8 +3,8 @@
 Thumbs.db
 desktop.ini
 Session.vim
-node_modules
-unicode-data/
+node_modules/*
+unicode-data/*
 !unicode-data/WordBreakOverrides.txt
-test
+test/*
 !test/testRunner.js

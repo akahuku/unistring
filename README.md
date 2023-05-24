@@ -9,7 +9,7 @@ actually simple UTF-16 sequence, so you must handle unicode's complicated
 mechanism such as surrogate pairs and combining character sequence.
 
 Unistring hides this complexity.  The currently supported Unicode version is
-14.0.0.
+14.0.0 and Unistring passes all 11454 test patterns provided by Unicode.org.
 
 ## Example
 
@@ -296,7 +296,10 @@ let foldedLines = Unistring.getFoldedLines(
 
 And then suddenly, like a cry in the night, like a cry that is followed by a stillness, came the last message. It is the briefest fragment, the broken beginnings of two sentences.`, {
 	columns: 50,  // number of columns to fold. default is 80
-	awidth: 1     // columns of ambiguous characters in east asian script, 1 or 2. default is 1
+	awidth: 1,    // columns of ambiguous characters in east asian script, 1 or 2. default is 2
+	ansi: false,  // if true, ignore ANSI escape sequences. default is false
+	characterReference // if true, treat &amp;#999999; / &amp;#x999999; as the character they
+	                   // represent. default is false
 });
 /*
 foldedLines = [
@@ -360,7 +363,9 @@ let us = Unistring('de\u0301licieux\uD83D\uDE0B');
 
 ### Install
 
-(TBD)
+```sh
+$ npm install @akahuku/unistring
+```
 
 ### Use it
 
@@ -422,8 +427,10 @@ methods for line breaking algorithm (UAX#14):
 * `getFoldedLines(str [,options = {}]): string[]`
 
 these tree methods take an option for which the following properties are available:
-* columns: number of column (default: 80)
-* awidth: column of ambiguous character in East Asian Width (1 or 2, default: 1)
+* columns: number -- number of column (default: 80)
+* awidth: number -- column of ambiguous character in East Asian Width (1 or 2, default: 2)
+* ansi: boolean -- ignore ANSI escape sequences and treat their width as 0 (default: false)
+* characterReference: boolean -- treat SGML character reference (&#999999;, &#x999999; ...) as the character they represent (default: false)
 
 ### Class constants
 
