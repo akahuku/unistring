@@ -70,8 +70,7 @@ function run (tests) {
 					assertCount += this.assertCount;
 					failedCount += this.failed;
 					if (this.failed) {
-						console.log(`******** ${this.testName} ********`);
-						console.log(`\t${this.log.join('\n\t')}`);
+						console.log(`\n\t${this.log.join('\n\t')}`);
 					}
 					testCount++;
 					console.log(`...${this.assertCount}`);

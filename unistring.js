@@ -2644,22 +2644,94 @@ function canBreakLine (prev, next, prevcp, nextcp) {
 }
 
 function getColumnsFor (s, options = {}) {
+	let result = 0;
+
+	if (options.characterReference) {
+		s = s.replace(/&#([xX])?([^;]+);/g, ($0, $1, $2) => {
+			return String.fromCodePoint(parseInt($2, /^x/i.test($1) ? 16 : 10));
+		})
+	}
+
+	if (options.ansi) {
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\u0040-\u005f])/).forEach(fragment => {
+			if (!/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
+			 && !/^\u001b[\u0040-\u005f]$/.test(fragment)) {
+				result += getColumnsFor.plain(fragment, options.awidth);
+			}
+		});
+	}
+	else {
+		result += getColumnsFor.plain(s, options.awidth);
+	}
+
+	return result;
+}
+
+getColumnsFor.plain = (s, awidth = 2) => {
 	const eawMap = [
-		1,                   /* Newtral */
-		1,                   /* Narrow */
-		options.awidth || 2, /* Ambiguous */
-		2,                   /* Wide */
-		1,                   /* Half Width */
-		2,                   /* Full Width */
+		1,           /* Neutral */
+		1,           /* Narrow */
+		awidth || 2, /* Ambiguous */
+		2,           /* Wide */
+		1,           /* Half Width */
+		2,           /* Full Width */
 	];
 	let result = 0;
 	Unistring(s).forEach(clusters => {
 		result += eawMap[eastAsianWidthFinder(clusters.codePoints[0])] || 0;
 	});
 	return result;
-}
+};
 
 function divideByColumns (s, columns, options = {}) {
+	if (options.characterReference) {
+		s = s.replace(/&#([xX])?([^;]+);/g, ($0, $1, $2) => {
+			return String.fromCodePoint(parseInt($2, /^x/i.test($1) ? 16 : 10));
+		})
+	}
+
+	if (columns <= 0) {
+		return ['', s];
+	}
+
+	if (options.ansi) {
+		const clusters = [];
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\u0040-\u005f])/).forEach(fragment => {
+			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
+			 || /^\u001b[\u0040-\u005f]$/.test(fragment)) {
+				clusters.push([fragment, 0]);
+			}
+			else {
+				Unistring(fragment).forEach(cluster => {
+					clusters.push([
+						cluster.rawString,
+						getColumnsFor.plain(cluster.rawString, options.awidth)
+					]);
+				});
+			}
+		});
+
+		let result = '';
+		let leftColumns = 0;
+		for (let i = 0; i < clusters.length; i++) {
+			const graphemeColumn = clusters[i][1];
+			if (leftColumns + graphemeColumn > columns) {
+				return [
+					clusters.slice(0, i).map(c => c[0]).join(''),
+					clusters.slice(i).map(c => c[0]).join('')
+				];
+			}
+			leftColumns += graphemeColumn;
+		}
+
+		return [s, ''];
+	}
+	else {
+		return divideByColumns.plain(s, columns, options.awidth);
+	}
+}
+
+divideByColumns.plain = (s, columns, awidth = 2) => {
 	if (columns <= 0) {
 		return ['', s];
 	}
@@ -2669,7 +2741,7 @@ function divideByColumns (s, columns, options = {}) {
 	const u = Unistring(s);
 	for (let i = 0; i < u.clusters.length; i++) {
 		const grapheme = u.clusters[i];
-		const graphemeColumn = getColumnsFor(grapheme.rawString, options);
+		const graphemeColumn = getColumnsFor.plain(grapheme.rawString, awidth);
 		if (leftColumns + graphemeColumn > columns) {
 			return [
 				u.slice(0, i).toString(),
@@ -2680,7 +2752,7 @@ function divideByColumns (s, columns, options = {}) {
 	}
 
 	return [s, ''];
-}
+};
 
 function getLineBreakableClusters (s) {
 	return buildLineBreakableClusters(resolveSurrogates(s));
@@ -2691,7 +2763,7 @@ function getFoldedLines (s, options = {}) {
 		const result = [];
 		const clusters = buildLineBreakableClusters(resolveSurrogates(line));
 		for (const cluster of clusters) {
-			result.push([cluster.text, getColumnsFor(cluster.text, options)]);
+			result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
 		}
 		return result;
 	}
@@ -2711,7 +2783,7 @@ function getFoldedLines (s, options = {}) {
 			else {
 				const clusters = buildLineBreakableClusters(resolveSurrogates(fragment));
 				for (const cluster of clusters) {
-					result.push([cluster.text, getColumnsFor(cluster.text, options)]);
+					result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
 				}
 			}
 		});
@@ -2767,9 +2839,9 @@ function getFoldedLines (s, options = {}) {
 			const [clusterText, clusterColumns] = breakableClusters[i];
 			if (lineColumns + clusterColumns > columns) {
 				if (clusterColumns > columns) {
-					const [lead, rest] = divideByColumns(clusterText, columns - lineColumns, options);
+					const [lead, rest] = divideByColumns.plain(clusterText, columns - lineColumns, options.awidth);
 					result.push(lineFragment + lead);
-					breakableClusters.splice(i + 1, 0, [rest, getColumnsFor(rest, options)]);
+					breakableClusters.splice(i + 1, 0, [rest, getColumnsFor.plain(rest, options.awidth)]);
 					lineColumns = 0;
 					lineFragment = '';
 				}

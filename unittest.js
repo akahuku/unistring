@@ -37,6 +37,16 @@ const TEST_FILES = [
 	}
 ];
 
+// U+0926 Devanagari Letter Da (Lo)
+// U+0947 Devanagari Vowel Sign E (Mn)
+// U+0935 Devanagari Letter Va (Lo)
+// U+0928 Devanagari Letter Na (Lo)
+// U+093e Devanagari Vowel Sign Aa (Mc)
+// U+0917 Devanagari Letter Ga (Lo)
+// U+0930 Devanagari Letter Ra (Lo)
+// U_0940 Devanagari Vowel Sign Ii (Mc)
+const DEVANAGARI = '\u0926\u0947\u0935\u0928\u093e\u0917\u0930\u0940';
+
 const tests = {
 	testFind: test => {
 		readFileByLine(
@@ -571,13 +581,55 @@ const tests = {
 		return false;
 	},
 	testGetColumnsFor: test => {
-		test.eq('#newtral',          5, Unistring.getColumnsFor('देवनागरी'));
-		test.eq('#ambiguous (1)',   10, Unistring.getColumnsFor('どうして…'));
-		test.eq('#ambiguous (2)',    9, Unistring.getColumnsFor('どうして…', {awidth: 1}));
-		test.eq('#narrow + combining marks',  7, Unistring.getColumnsFor('⦅a\u0302pple⦆'));
-		test.eq('#wide',            10, Unistring.getColumnsFor('あいうえお'));
-		test.eq('#half',             8, Unistring.getColumnsFor('ﾊﾝｶｸｶﾀｶﾅ'));
-		test.eq('#full',            12, Unistring.getColumnsFor('ＡＢＣ０１２'));
+		test.eq('#neutral',
+			5, Unistring.getColumnsFor(DEVANAGARI));
+		test.eq('#ambiguous (1)',
+			10, Unistring.getColumnsFor('どうして…'));
+		test.eq('#ambiguous (2)',
+			9, Unistring.getColumnsFor('どうして…', {awidth: 1}));
+		test.eq('#narrow + combining marks',
+			7, Unistring.getColumnsFor('⦅a\u0302pple⦆'));
+		test.eq('#wide',
+			10, Unistring.getColumnsFor('あいうえお'));
+		test.eq('#half',
+			8, Unistring.getColumnsFor('ﾊﾝｶｸｶﾀｶﾅ'));
+		test.eq('#full',
+			12, Unistring.getColumnsFor('ＡＢＣ０１２'));
+	},
+	testGetColumnsForAnsi: test => {
+		const options = {ansi: true};
+		test.eq('#neutral',
+			5, Unistring.getColumnsFor(`\u001b[1m${DEVANAGARI}\u001b[m`, options));
+		test.eq('#ambiguous (1)',
+			10, Unistring.getColumnsFor('\u001b[1mどうして…\u001b[m', options));
+		test.eq('#ambiguous (2)',
+			9, Unistring.getColumnsFor('\u001b[1mどうして…', {awidth: 1, ...options}));
+		test.eq('#narrow + combining marks',
+			7, Unistring.getColumnsFor('\u001b[1m⦅a\u0302pple⦆\u001b[m', options));
+		test.eq('#wide',
+			10, Unistring.getColumnsFor('\u001b[1mあいうえお\u001b[m', options));
+		test.eq('#half',
+			8, Unistring.getColumnsFor('\u001b[1mﾊﾝｶｸｶﾀｶﾅ\u001b[m', options));
+		test.eq('#full',
+			12, Unistring.getColumnsFor('\u001b[1mＡＢＣ０１２\u001b[m', options));
+	},
+	testGetColumnsForAnsiAndCharRef: test => {
+		const options = {ansi: true, characterReference: true};
+		const transformed = DEVANAGARI.split('').map(ch => `&#${ch.codePointAt(0)};`).join('');
+		test.eq('#neutral',
+			5, Unistring.getColumnsFor(`\u001b[1m${transformed}\u001b[m`, options));
+		test.eq('#ambiguous (1)',
+			10, Unistring.getColumnsFor('\u001b[1mど&#x3046;して…\u001b[m', options));
+		test.eq('#ambiguous (2)',
+			9, Unistring.getColumnsFor('\u001b[1mど&#x3046;して…', {awidth: 1, ...options}));
+		test.eq('#narrow + combining marks',
+			7, Unistring.getColumnsFor('\u001b[1m⦅a\u0302&#x0070;ple⦆\u001b[m', options));
+		test.eq('#wide',
+			10, Unistring.getColumnsFor('\u001b[1mあ&#x3044;うえお\u001b[m', options));
+		test.eq('#half',
+			8, Unistring.getColumnsFor('\u001b[1mﾊ&#xff9d;ｶｸｶﾀｶﾅ\u001b[m', options));
+		test.eq('#full',
+			12, Unistring.getColumnsFor('\u001b[1mＡ&#xff22;Ｃ０１２\u001b[m', options));
 	},
 	testGetFoldedLines: test => {
 		const s = `\
@@ -704,6 +756,57 @@ const tests = {
 		const [left3, right3] = Unistring.divideByColumns('a\u0302pplejuice', 50);
 		test.eq('left #3', 'a\u0302pplejuice', left3);
 		test.eq('right #3', '', right3);
+
+		//                                                 0123456789012345
+		const [left4, right4] = Unistring.divideByColumns('全角の途中で分割', 9);
+		test.eq('left #4', '全角の途', left4);
+		test.eq('right #4', '中で分割', right4);
+	},
+	testDivideByColumnsAnsi: test => {
+		const options = {ansi: true};
+		const [left1, right1] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pplejuice\u001b[m', 5, options);
+		test.eq('left #1', '\u001b[4ma\u0302pple', left1);
+		test.eq('right #1', 'juice\u001b[m', right1);
+
+		const [left2, right2] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pplejuice\u001b[m', -5, options);
+		test.eq('left #2', '', left2);
+		test.eq('right #2', '\u001b[4ma\u0302pplejuice\u001b[m', right2);
+
+		const [left3, right3] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pplejuice\u001b[m', 50, options);
+		test.eq('left #3', '\u001b[4ma\u0302pplejuice\u001b[m', left3);
+		test.eq('right #3', '', right3);
+
+		const [left4, right4] = Unistring.divideByColumns(
+		//            0123456789012345
+			'\u001b[4m全角の途中で分割\u001b[m', 9, options);
+		test.eq('left #4', '\u001b[4m全角の途', left4);
+		test.eq('right #4', '中で分割\u001b[m', right4);
+	},
+	testDivideByColumnsAnsiAndCharRef: test => {
+		const options = {ansi: true, characterReference: true};
+		const [left1, right1] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pple&#x006a;uice\u001b[m', 5, options);
+		test.eq('left #1', '\u001b[4ma\u0302pple', left1);
+		test.eq('right #1', 'juice\u001b[m', right1);
+
+		const [left2, right2] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pple&#x006a;uice\u001b[m', -5, options);
+		test.eq('left #2', '', left2);
+		test.eq('right #2', '\u001b[4ma\u0302pplejuice\u001b[m', right2);
+
+		const [left3, right3] = Unistring.divideByColumns(
+			'\u001b[4ma\u0302pple&#x006a;uice\u001b[m', 50, options);
+		test.eq('left #3', '\u001b[4ma\u0302pplejuice\u001b[m', left3);
+		test.eq('right #3', '', right3);
+
+		const [left4, right4] = Unistring.divideByColumns(
+		//            0123456789012345
+			'\u001b[4m全角&#x306e;途中で分割\u001b[m', 9, options);
+		test.eq('left #4', '\u001b[4m全角の途', left4);
+		test.eq('right #4', '中で分割\u001b[m', right4);
 	}
 };
 

@@ -185,7 +185,7 @@ function main () {
 			'   * argument is arbitrary string or "U+XXXXXX"',
 			'',
 			'options for text folding:',
-			'  --fold=<argument>'
+			'  --fold=<argument>',
 			'   * argument is arbitrary string',
 		].join('\n'));
 	}
