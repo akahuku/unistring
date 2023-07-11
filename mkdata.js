@@ -122,8 +122,7 @@ function makeJs (params) {
 
 	tmp = tmp.toString('hex').toUpperCase().replace(/.{80}/g, '$&\\\n');
 	output(
-		`${tmp}\'`,
-		'.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));',
+		`${tmp}';`,
 		''
 	);
 

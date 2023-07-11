@@ -144,7 +144,7 @@ words1 = [
 
 ### Break into words by UAX#29 word boundary rule, with Unistring's script extension
 
-You can turn on Uniscript's script extension (treat neighboring same script
+You can turn on Unistring's script extension (treat neighboring same script
 character as part of word) by setting the second argument of getWords() to
 true.
 

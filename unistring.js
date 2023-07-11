@@ -185,8 +185,7 @@ const GRAPHEME_BREAK_PROPS = '\
 077BD101010785D1E10007AAD181000742D261000700DAE106073BDA41060775DA21000784DA2100\
 079BDAA10007A1DAE1010700E0E1000708E02102071BE0E1000723E041000726E0A1000730E1E100\
 07AEE2210007ECE2810007D0E8E1000744E9E10008E6F1410307FBF3A1000600000E040720000E0C\
-0680000E100700010E1E06F001EEFF06EF092EC2'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+0680000E100700010E1E06F001EEFF06EF092EC2';
 
 const GRAPHEME_BREAK_PROP_UNIT_LENGTH = 5;
 const GBP = {
@@ -355,8 +354,7 @@ const WORD_BREAK_PROPS = '\
 0C4BEE21000C4DEE61000C51EE41000C54EE21000C57EE21000C59EE21000C5BEE21000C5DEE2100\
 0C5FEE21000C61EE41000C64EE21000C67EE81000C6CEEE1000C74EE81000C79EE81000C7EEE2100\
 0C80EE41010C8BEE21020CA1EE61000CA5EEA1000CABEE21020C30F141030C50F141030C70F14103\
-0AE6F1410309FBF3A10010F0FB41010B01002E000920000E0C0900010E1E'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+0AE6F1410309FBF3A10010F0FB41010B01002E000920000E0C0900010E1E';
 
 const WORD_BREAK_PROP_UNIT_LENGTH = 5;
 const WBP = {
@@ -708,8 +706,7 @@ const SENTENCE_BREAK_PROPS = '\
 0BF64FE2FF0BF557E2FF0BF45FE2FF0BF367E2FF0BF26FE2FF0BF177E2FF0BF07FE2FF0BEF87E2FF\
 0BEE8FE2FF0BED97E2FF0BEC9F82DE0B00A7E2FF0BFFAEE2FF0BFEB662070B40B7C21B0B20B8E2FF\
 0B1FC0E2FF0B1EC882D00BB0CEE2FF0BAFD6E2FF0BAEDEE2FF0BADE682A60B00F8C2430B0000E3FF\
-0BFF07E3FF0BFE0FA3690701002E000520000E0C0500010E1E'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+0BFF07E3FF0BFE0FA3690701002E000520000E0C0500010E1E';
 
 const SENTENCE_BREAK_PROP_UNIT_LENGTH = 5;
 const SBP = {
@@ -867,8 +864,7 @@ A1A305E101A1B305E100A1BB0541006E0006E1266E4007C1026E60070101028007C1000287074105
 24F83FE2FF24F747E2FF24F64FE2FF24F557E2FF24F45FE2FF24F367E2FF24F26FE2FF24F177E2FF\
 24F07FE2FF24EF87E2FF24EE8FE2FF24ED97E2FF24EC9F82DE2400A7E2FF24FFAEE2FF24FEB66207\
 2440B7C21B2420B8E2FF241FC0E2FF241EC882D024B0CEE2FF24AFD6E2FF24AEDEE2FF24ADE682A6\
-2400F8C243240000E3FF24FF07E3FF24FE0FA3690101002E000120000E0C2900010E1E'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+2400F8C243240000E3FF24FF07E3FF24FE0FA3690101002E000120000E0C2900010E1E';
 
 const SCRIPTS_PROP_UNIT_LENGTH = 5;
 const SCRIPT = {
@@ -1415,8 +1411,7 @@ const LINE_BREAK_PROPS = '\
 00FB27F0FF00FA2FF0FF00F937F0FF00F83FF0FF00F747F0FF00F64FF0FF00F557F0FF00F45FF0FF\
 00F367F0FF00F26FF0FF00F177F0FF00F07FF0FF00EF87F0FF00EE8FF0FF00ED97F0FF00EC9FF0FF\
 00EBA7F0FF00EAAFF0FF00E9B7F0FF00E8BFF0FF00E7C7F0FF00E6CFF0FF00E5D7F0FF00E4DFF0FF\
-00E3E7F0FF00E2EFF0FF00E1F7F0FF00E0FFD003'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+00E3E7F0FF00E2EFF0FF00E1F7F0FF00E0FFD003';
 
 const LINE_BREAK_PROP_UNIT_LENGTH = 5;
 const LBP = {
@@ -1643,8 +1638,7 @@ const EAST_ASIAN_WIDTH_PROPS = '\
 02F83FF0FF02F747F0FF02F64FF0FF02F557F0FF02F45FF0FF02F367F0FF02F26FF0FF02F177F0FF\
 02F07FF0FF02EF87F0FF02EE8FF0FF02ED97F0FF02EC9FF0FF02EBA7F0FF02EAAFF0FF02E9B7F0FF\
 02E8BFF0FF02E7C7F0FF02E6CFF0FF02E5D7F0FF02E4DFF0FF02E3E7F0FF02E2EFF0FF02E1F7F0FF\
-02E0FFD003'
-.replace(/[0-9A-F]{2}/g, $0=>String.fromCharCode(parseInt($0, 16)));
+02E0FFD003';
 
 const EAST_ASIAN_WIDTH_PROP_UNIT_LENGTH = 5;
 const EAW = {
@@ -1664,58 +1658,97 @@ const EAW_NAMES = Object.keys(EAW);
  * variables
  */
 
-const graphemeFinder = createFinderWithEmoji(
-	GRAPHEME_BREAK_PROPS, GRAPHEME_BREAK_PROP_UNIT_LENGTH, GBP.Other, GBP_NAMES.length);
-const wordFinder = createFinderWithEmoji(
-	WORD_BREAK_PROPS, WORD_BREAK_PROP_UNIT_LENGTH, WBP.Other, WBP_NAMES.length);
-const sentenceFinder = createFinder(
-	SENTENCE_BREAK_PROPS, SENTENCE_BREAK_PROP_UNIT_LENGTH, SBP.Other);
-const scriptFinder = createFinder(
-	SCRIPTS, SCRIPTS_PROP_UNIT_LENGTH, SCRIPT.Unknown);
-const lineBreakFinder = createFinder(
-	LINE_BREAK_PROPS, LINE_BREAK_PROP_UNIT_LENGTH, LBP.XX);
-const eastAsianWidthFinder = createFinder(
-	EAST_ASIAN_WIDTH_PROPS, EAST_ASIAN_WIDTH_PROP_UNIT_LENGTH, EAW.N);
+function stub (label, creator) {
+	return new Proxy(() => {}, {
+		apply: (obj, thisArg, args) => {
+			return creator().apply(thisArg, args);
+		}
+	});
+}
+
+let graphemeFinder = stub('grapheme', () => {
+	return graphemeFinder = createFinderWithEmoji(
+		Uint8Array.from(
+			GRAPHEME_BREAK_PROPS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		GRAPHEME_BREAK_PROP_UNIT_LENGTH,
+		GBP.Other, GBP_NAMES.length
+	);
+});
+
+let wordFinder = stub('word', () => {
+	return wordFinder = createFinderWithEmoji(
+		Uint8Array.from(
+			WORD_BREAK_PROPS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		WORD_BREAK_PROP_UNIT_LENGTH,
+		WBP.Other, WBP_NAMES.length
+	);
+});
+
+let sentenceFinder = stub('sentence', () => {
+	return sentenceFinder = createFinder(
+		Uint8Array.from(
+			SENTENCE_BREAK_PROPS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		SENTENCE_BREAK_PROP_UNIT_LENGTH,
+		SBP.Other
+	);
+});
+
+let scriptFinder = stub('script', () => {
+	return scriptFinder = createFinder(
+		Uint8Array.from(
+			SCRIPTS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		SCRIPTS_PROP_UNIT_LENGTH,
+		SCRIPT.Unknown
+	);
+});
+
+let lineBreakFinder = stub('script', () => {
+	return lineBreakFinder = createFinder(
+		Uint8Array.from(
+			LINE_BREAK_PROPS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		LINE_BREAK_PROP_UNIT_LENGTH,
+		LBP.XX
+	);
+});
+
+let eastAsianWidthFinder = stub('script', () => {
+	return eastAsianWidthFinder = createFinder(
+		Uint8Array.from(
+			EAST_ASIAN_WIDTH_PROPS.match(/[0-9A-F]{2}/g),
+			a => parseInt(a, 16)),
+		EAST_ASIAN_WIDTH_PROP_UNIT_LENGTH,
+		EAW.N);
+});
 
 /*
  * utility functions
  */
 
 function pick2 (data, index) {
-	return data.charCodeAt(index)
-		|  data.charCodeAt(index + 1) << 8;
+	return data[index]
+		|  data[index + 1] << 8;
 }
 
 function pick3 (data, index) {
-	return data.charCodeAt(index)
-		|  data.charCodeAt(index + 1) << 8
-		|  data.charCodeAt(index + 2) << 16;
+	return data[index]
+		|  data[index + 1] << 8
+		|  data[index + 2] << 16;
 }
 
 function pick4 (data, index) {
-	return data.charCodeAt(index)
-		|  data.charCodeAt(index + 1) << 8
-		|  data.charCodeAt(index + 2) << 16
-		|  data.charCodeAt(index + 3) << 24;
+	return data[index]
+		|  data[index + 1] << 8
+		|  data[index + 2] << 16
+		|  data[index + 3] << 24;
 }
 
 function resolveSurrogates (s) {
-	const result = [];
-	s.replace(/[\ud800-\udb7f][\udc00-\udfff]|[\s\S]/g, $0 => {
-		if ($0.length == 2) {
-			const hcp = $0.charCodeAt(0);
-			const lcp = $0.charCodeAt(1);
-			result.push(
-				((hcp & 0x03c0) + 0x0040) << 10
-				| (hcp & 0x003f) << 10
-				| (lcp & 0x03ff)
-			);
-		}
-		else {
-			result.push($0.charCodeAt(0));
-		}
-	});
-	return result;
+	return Array.from(s, ch => ch.codePointAt(0));
 }
 
 function find (cp, table, units, otherValue) {
@@ -1737,7 +1770,7 @@ function find (cp, table, units, otherValue) {
 			right = middle - 1;
 		}
 		else {
-			return table.charCodeAt(index);
+			return table[index];
 		}
 	}
 
