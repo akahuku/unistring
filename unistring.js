@@ -2686,8 +2686,9 @@ function getColumnsFor (s, options = {}) {
 	}
 
 	if (options.ansi) {
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			if (!/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
+			 && !/^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)
 			 && !/^\u001b[\u0040-\u005f]$/.test(fragment)) {
 				result += getColumnsFor.plain(fragment, options.awidth);
 			}
@@ -2729,8 +2730,9 @@ function divideByColumns (s, columns, options = {}) {
 
 	if (options.ansi) {
 		const clusters = [];
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
+			 || /^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)
 			 || /^\u001b[\u0040-\u005f]$/.test(fragment)) {
 				clusters.push([fragment, 0]);
 			}
@@ -2803,9 +2805,13 @@ function getFoldedLines (s, options = {}) {
 
 	function fetchAnsiClusters (line) {
 		const result = [];
-		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			// CSI sequences
 			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)) {
+				result.push([fragment, 0]);
+			}
+			// OSC sequences
+			else if (/^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)) {
 				result.push([fragment, 0]);
 			}
 			// Fe sequences
