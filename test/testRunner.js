@@ -2,6 +2,13 @@ function p (label, number) {
 	return number + ' ' + (number == 1 ? label : `${label}s`);
 }
 
+function esc (s) {
+	return s
+		.replace(/[\x00-\x1f]/g, $0 => {
+			return '\x1b[1;36m^' + String.fromCharCode($0.charCodeAt(0) + 64) + '\x1b[m';
+		});
+	}
+
 function run (tests) {
 	switch (Object.prototype.toString.call(tests)) {
 	case '[object Object]':
@@ -43,8 +50,8 @@ function run (tests) {
 						this.failed++;
 						this.log.push(
 							`---- ${label}`,
-							`expected: ${expected}\u001b[m`,
-							`  actual: ${actual}\u001b[m`
+							`expected: ${esc(expected)}`,
+							`  actual: ${esc(actual)}`
 						);
 						if (this.stopOnFail) {
 							throw new Error('Stop on fail');

@@ -2806,8 +2806,16 @@ function getFoldedLines (s, options = {}) {
 	function fetchAnsiClusters (line) {
 		const result = [];
 		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
+			// SGR reset sequence
+			if (/^\u001b\[0*m$/.test(fragment)) {
+				result.push([fragment, 0, 2]);
+			}
+			// SGR sequences
+			else if (/^\u001b\[.*?m/.test(fragment)) {
+				result.push([fragment, 0, 1]);
+			}
 			// CSI sequences
-			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)) {
+			else if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)) {
 				result.push([fragment, 0]);
 			}
 			// OSC sequences
@@ -2845,6 +2853,13 @@ function getFoldedLines (s, options = {}) {
 		);
 	}
 
+	function esc (s) {
+		return s
+			.replace(/[\x00-\x1f]/g, $0 => {
+				return '\x1b[1;36m^' + String.fromCharCode($0.charCodeAt(0) + 64) + '\x1b[m';
+			});
+	}
+
 	const columns = options.columns || 80;
 	const result = [];
 	let fetchClusters = fetchPlainClusters;
@@ -2874,20 +2889,43 @@ function getFoldedLines (s, options = {}) {
 		const breakableClusters = fetchClusters(line);
 		let lineColumns = 0;
 		let lineFragment = '';
+		let sgrSequence = '';
 		for (let i = 0; i < breakableClusters.length; i++) {
 			const [clusterText, clusterColumns] = breakableClusters[i];
+			if (clusterColumns == 0) {
+				switch (breakableClusters[i][2]) {
+				case 1:
+					sgrSequence += clusterText;
+					break;
+				case 2:
+					sgrSequence = '';
+					break;
+				}
+			}
 			if (lineColumns + clusterColumns > columns) {
 				if (clusterColumns > columns) {
 					const [lead, rest] = divideByColumns.plain(clusterText, columns - lineColumns, options.awidth);
-					result.push(lineFragment + lead);
-					breakableClusters.splice(i + 1, 0, [rest, getColumnsFor.plain(rest, options.awidth)]);
+					if (sgrSequence != '') {
+						result.push(lineFragment + lead + '\u001b[m');
+					}
+					else {
+						result.push(lineFragment + lead);
+					}
+					breakableClusters.splice(
+						i + 1, 0,
+						[rest, getColumnsFor.plain(rest, options.awidth)]);
 					lineColumns = 0;
-					lineFragment = '';
+					lineFragment = sgrSequence;
 				}
 				else {
-					result.push(lineFragment);
+					if (sgrSequence) {
+						result.push(lineFragment + '\u001b[m');
+					}
+					else {
+						result.push(lineFragment);
+					}
 					lineColumns = clusterColumns;
-					lineFragment = clusterText;
+					lineFragment = sgrSequence + clusterText;
 				}
 			}
 			else {

@@ -672,6 +672,18 @@ const tests = {
 		test.eq( '#9', 'サッサじゃなくて頭テカテカの\u001b[4mホンワカパッパ\u001b[mを選んだ', result[8]);
 		test.eq('#10', 'んだよ', result[9]);
 	},
+	testGetFoldedLinesWithAnsi2: test => {
+		const s = `\
+\u001b[1;91mﾋｬｱ信は潔く負けを認めろ(H\u0308yar believers should accept defeat gracefully)\u001b[m`
+		const result = Unistring.getFoldedLines(s, {
+			columns: 50,
+			awidth: 1,
+			ansi: true
+		});
+
+		test.eq( '#1', '\u001b[1;91mﾋｬｱ信は潔く負けを認めろ(H\u0308yar believers should \u001b[m', result[0]);
+		test.eq( '#2', '\u001b[1;91maccept defeat gracefully)\u001b[m', result[1]);
+	},
 	testGetFoldedLinesWithCharRef: test => {
 		const s = `\
 &#xff8b;&#xff6c;&#65393;信は潔く負けを認めろ(H\u0308yar believers should accept defeat gracefully)
@@ -706,15 +718,15 @@ const tests = {
 			characterReference: true
 		});
 
-		test.eq( '#1', 'ﾋｬｱ信は潔く負けを認めろ\u001b[1;91m(H\u0308yar believers should ', result[0]);
-		test.eq( '#2', 'accept defeat gracefully)\u001b[m\n', result[1]);
+		test.eq( '#1', 'ﾋｬｱ信は潔く負けを認めろ\u001b[1;91m(H\u0308yar believers should \u001b[m', result[0]);
+		test.eq( '#2', '\u001b[1;91maccept defeat gracefully)\u001b[m\n', result[1]);
 		test.eq( '#3', 'お前らの大好きな日テレ版は視聴率低迷・社長逃亡で半', result[2]);
 		test.eq( '#4', '年で打ち切り・資料の焼き捨て・原作者の忌避・声優か', result[3]);
 		test.eq( '#5', 'らも白黒だったと間違えられる程度の作品 対するテレ', result[4]);
 		test.eq( '#6', '朝版は日テレ版の失敗を研究した結果原作者に愛され毎', result[5]);
 		test.eq( '#7', '年大長編が作られ途中でリニューアルしながら40年続く', result[6]);
-		test.eq( '#8', '国民的アニメに成長 世間は\u001b[4mつんつるてんのホイ来た', result[7]);
-		test.eq( '#9', 'サッサ\u001b[mじゃなくて頭テカテカのホンワカパッパを選んだ', result[8]);
+		test.eq( '#8', '国民的アニメに成長 世間は\u001b[4mつんつるてんのホイ来た\u001b[m', result[7]);
+		test.eq( '#9', '\u001b[4mサッサ\u001b[mじゃなくて頭テカテカのホンワカパッパを選んだ', result[8]);
 		test.eq('#10', 'んだよ', result[9]);
 	},
 	testGetFoldedLinesWithEmoji: test => {
