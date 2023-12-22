@@ -2686,9 +2686,9 @@ function getColumnsFor (s, options = {}) {
 	}
 
 	if (options.ansi) {
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			if (!/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
-			 && !/^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)
+			 && !/^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)
 			 && !/^\u001b[\u0040-\u005f]$/.test(fragment)) {
 				result += getColumnsFor.plain(fragment, options.awidth);
 			}
@@ -2730,9 +2730,9 @@ function divideByColumns (s, columns, options = {}) {
 
 	if (options.ansi) {
 		const clusters = [];
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
-			 || /^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)
+			 || /^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)
 			 || /^\u001b[\u0040-\u005f]$/.test(fragment)) {
 				clusters.push([fragment, 0]);
 			}
@@ -2805,24 +2805,29 @@ function getFoldedLines (s, options = {}) {
 
 	function fetchAnsiClusters (line) {
 		const result = [];
-		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b\].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
+		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
 			// SGR reset sequence
+			//   ESC [ m
 			if (/^\u001b\[0*m$/.test(fragment)) {
 				result.push([fragment, 0, 2]);
 			}
-			// SGR sequences
+			// SGR (Select Graphics Rendition) sequences
+			//   ESC [ ... m
 			else if (/^\u001b\[.*?m/.test(fragment)) {
 				result.push([fragment, 0, 1]);
 			}
-			// CSI sequences
+			// Other CSI (Control Sequence Introducer) sequences, except SGR
 			else if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)) {
 				result.push([fragment, 0]);
 			}
-			// OSC sequences
-			else if (/^\u001b\].+?(?:\u0007|\u001b\\)$/.test(fragment)) {
+			// OSC (Operation System Command) sequences
+			//   ESC ] ... BEL|ESC \
+			// DCS (Device Control String) sequences
+			//   ESC P ... BEL|ESC \
+			else if (/^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)) {
 				result.push([fragment, 0]);
 			}
-			// Fe sequences
+			// Other Fe sequences, except OSC,DCS
 			else if (/^\u001b[\u0040-\u005f]$/.test(fragment)) {
 				result.push([fragment, 0]);
 			}
@@ -2860,9 +2865,23 @@ function getFoldedLines (s, options = {}) {
 			});
 	}
 
-	const columns = options.columns || 80;
+	const columnsSource = options.columns || 80;
 	const result = [];
 	let fetchClusters = fetchPlainClusters;
+	let fetchColumns;
+
+	if (Array.isArray(columnsSource) && columnsSource.length) {
+		fetchColumns = () => {
+			const index = result.length;
+			const columns = index < columnsSource.length ?
+				columnsSource[index] :
+				columnsSource[columnsSource.length - 1];
+			return columns || options.fallbackColumns || 80;
+		};
+	}
+	else {
+		fetchColumns = () => columnsSource;
+	}
 
 	if (options.ansi && options.characterReference) {
 		fetchClusters = fetchAnsiCharRefClusters;
@@ -2890,8 +2909,10 @@ function getFoldedLines (s, options = {}) {
 		let lineColumns = 0;
 		let lineFragment = '';
 		let sgrSequence = '';
+		let columns = fetchColumns();
 		for (let i = 0; i < breakableClusters.length; i++) {
 			const [clusterText, clusterColumns] = breakableClusters[i];
+
 			if (clusterColumns == 0) {
 				switch (breakableClusters[i][2]) {
 				case 1:
@@ -2927,6 +2948,7 @@ function getFoldedLines (s, options = {}) {
 					lineColumns = clusterColumns;
 					lineFragment = sgrSequence + clusterText;
 				}
+				columns = fetchColumns();
 			}
 			else {
 				lineColumns += clusterColumns;

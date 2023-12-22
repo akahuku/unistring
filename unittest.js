@@ -756,6 +756,22 @@ const tests = {
 		test.eq('#7', 'tcupidatatnonproidentsuntinculpaquiofficiadeserunt', result[6]);
 		test.eq('#8', 'mollitanimidestlaborum.', result[7]);
 	},
+	testGetFoldedLinesWithMultipleColumns: test => {
+		const s = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
+
+		const result = Unistring.getFoldedLines(s, {
+			columns: [40, 40, 40, 80],
+			awidth: 1
+		});
+		test.eq('#1', 'Lorem ipsum dolor sit amet, consectetur ', result[0]);
+		test.eq('#2', 'adipiscing elit, sed do eiusmod tempor ', result[1]);
+		test.eq('#3', 'incididunt ut labore et dolore magna ', result[2]);
+		test.eq('#4', 'aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ', result[3]);
+		test.eq('#5', 'ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in ', result[4]);
+		test.eq('#6', 'voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint ', result[5]);
+		test.eq('#7', 'occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim ', result[6]);
+		test.eq('#8', 'id est laborum.', result[7]);
+	},
 	testDivideByColumns: test => {
 		const [left1, right1] = Unistring.divideByColumns('a\u0302pplejuice', 5);
 		test.eq('left #1', 'a\u0302pple', left1);
@@ -842,6 +858,16 @@ function readFileByLine (fileName, callback, callback2) {
 if (!fileExists(TEST_DIR)) {
 	fs.mkdirSync(TEST_DIR);
 }
+
+/*
+ * - run all unit tests
+ *
+ *   $ ./unittest.js
+ *
+ * - run arbitrary tests
+ *
+ *   $ ./unittest.js --test=testA,testB,...
+ */
 
 loadFiles(TEST_FILES).then(() => {
 	process.argv.reduce((result, arg) => {
