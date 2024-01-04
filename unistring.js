@@ -1655,6 +1655,35 @@ const EAW_NAMES = Object.keys(EAW);
 // >>>
 
 /*
+ * classes
+ */
+function TimelimitCache () {
+	this.lastCleared = Date.now();
+	this.cache = new Map;
+}
+
+TimelimitCache.prototype = {
+	TTL_MSECS: 1000 * 60,
+
+	has: function (key) {
+		return this.cache.has(key);
+	},
+	get: function (key) {
+		const result = this.cache.get(key);
+
+		if (Date.now() - this.lastCleared >= this.TTL_MSECS) {
+			this.cache.clear;
+			this.lastCleared = Date.now();
+		}
+
+		return result;
+	},
+	set: function (key, value) {
+		this.cache.set(key, value);
+	}
+};
+
+/*
  * variables
  */
 
@@ -1724,6 +1753,13 @@ let eastAsianWidthFinder = stub('script', () => {
 		EAST_ASIAN_WIDTH_PROP_UNIT_LENGTH,
 		EAW.N);
 });
+
+let defaultAwidth = 2;
+let linkCount = 0;
+
+let graphemeClusterCache = new TimelimitCache;
+let wordClusterCache = new Map([[false, new TimelimitCache], [true, new TimelimitCache]]);
+let lineBreakableClusterCache = new TimelimitCache;
 
 /*
  * utility functions
@@ -2139,7 +2175,16 @@ function wordIndexOf (utf16Index) {
 }
 
 function getWords (s, useScripts) {
-	const result = buildWordClusters(resolveSurrogates(s), useScripts);
+	const cache = wordClusterCache.get(!!useScripts);
+	let result;
+
+	if (cache.has(s)) {
+		result = cache.get(s).map(c => {return {...c}});
+	}
+	else {
+		result = buildWordClusters(resolveSurrogates(s), useScripts);
+		cache.set(s, result);
+	}
 
 	Object.defineProperty(result, 'wordIndexOf', {
 		value: wordIndexOf
@@ -2701,7 +2746,7 @@ function getColumnsFor (s, options = {}) {
 	return result;
 }
 
-getColumnsFor.plain = (s, awidth = 2) => {
+getColumnsFor.plain = (s, awidth) => {
 	const eawMap = [
 		1,           /* Neutral */
 		1,           /* Narrow */
@@ -2716,6 +2761,70 @@ getColumnsFor.plain = (s, awidth = 2) => {
 	});
 	return result;
 };
+
+function normalizeHyperlinks (lines) {
+	const pattern = /\x1b\]8;([^;]*);([^\x07]*)\x07/g;
+	const lastLinkStart = {
+		line: -1,
+		index: -1,
+		length: -1,
+		p2: null,
+		p3: null
+	};
+
+	for (let i = 0; i < lines.length; i++) {
+		pattern.lastIndex = 0;
+
+		let re;
+		while ((re = pattern.exec(lines[i]))) {
+			// found link start
+			if (re[2] != '') {
+				lastLinkStart.line = i;
+				lastLinkStart.index = re.index;
+				lastLinkStart.length = re[0].length;
+				lastLinkStart.p2 = re[1].length ? re[1] : null;
+				lastLinkStart.p3 = re[2].length ? re[2] : null;
+			}
+
+			// found link end
+			else if (lastLinkStart.line >= 0) {
+				// single line link
+				if (lastLinkStart.line == i) {
+					;
+				}
+
+				// multiple line link
+				else {
+					const {line, index, length, p2, p3} = lastLinkStart;
+					const linkId = p2 || `id=_${Date.now()}_${linkCount++}`;
+					const linkStart = `\x1b]8;${linkId};${p3}\x07`;
+					const linkEnd = `\x1b]8;;\x07`;
+
+					// update middle lines
+					for (let j = i - 1; j > line; j--) {
+						lines[j] = `${linkStart}${lines[j]}${linkEnd}`;
+					}
+
+					// update head line
+					lines[line] =
+						`${lines[line].substring(0, index)}${linkStart}${lines[line].substring(index + length)}${linkEnd}`;
+
+					// update bottom line
+					lines[i] = `${linkStart}${lines[i]}`;
+					pattern.lastIndex += linkStart.length;
+				}
+
+				lastLinkStart.line = -1;
+				lastLinkStart.index = -1;
+				lastLinkStart.length = -1;
+				lastLinkStart.p2 = null;
+				lastLinkStart.p3 = null;
+			}
+		}
+	}
+
+	return lines;
+}
 
 function divideByColumns (s, columns, options = {}) {
 	if (options.characterReference) {
@@ -2751,10 +2860,10 @@ function divideByColumns (s, columns, options = {}) {
 		for (let i = 0; i < clusters.length; i++) {
 			const graphemeColumn = clusters[i][1];
 			if (leftColumns + graphemeColumn > columns) {
-				return [
+				return normalizeHyperlinks([
 					clusters.slice(0, i).map(c => c[0]).join(''),
 					clusters.slice(i).map(c => c[0]).join('')
-				];
+				]);
 			}
 			leftColumns += graphemeColumn;
 		}
@@ -2766,7 +2875,7 @@ function divideByColumns (s, columns, options = {}) {
 	}
 }
 
-divideByColumns.plain = (s, columns, awidth = 2) => {
+divideByColumns.plain = (s, columns, awidth) => {
 	if (columns <= 0) {
 		return ['', s];
 	}
@@ -2776,7 +2885,7 @@ divideByColumns.plain = (s, columns, awidth = 2) => {
 	const u = Unistring(s);
 	for (let i = 0; i < u.clusters.length; i++) {
 		const grapheme = u.clusters[i];
-		const graphemeColumn = getColumnsFor.plain(grapheme.rawString, awidth);
+		const graphemeColumn = getColumnsFor.plain(grapheme.rawString, awidth || defaultAwidth);
 		if (leftColumns + graphemeColumn > columns) {
 			return [
 				u.slice(0, i).toString(),
@@ -2790,13 +2899,20 @@ divideByColumns.plain = (s, columns, awidth = 2) => {
 };
 
 function getLineBreakableClusters (s) {
-	return buildLineBreakableClusters(resolveSurrogates(s));
+	if (lineBreakableClusterCache.has(s)) {
+		return lineBreakableClusterCache.get(s).map(c => {return {...c}});
+	}
+	else {
+		const result = buildLineBreakableClusters(resolveSurrogates(s));
+		lineBreakableClusterCache.set(s, result);
+		return result;
+	}
 }
 
 function getFoldedLines (s, options = {}) {
 	function fetchPlainClusters (line) {
 		const result = [];
-		const clusters = buildLineBreakableClusters(resolveSurrogates(line));
+		const clusters = getLineBreakableClusters(line);
 		for (const cluster of clusters) {
 			result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
 		}
@@ -2833,7 +2949,7 @@ function getFoldedLines (s, options = {}) {
 			}
 			// Other normal string
 			else {
-				const clusters = buildLineBreakableClusters(resolveSurrogates(fragment));
+				const clusters = getLineBreakableClusters(fragment);
 				for (const cluster of clusters) {
 					result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
 				}
@@ -2925,7 +3041,9 @@ function getFoldedLines (s, options = {}) {
 			}
 			if (lineColumns + clusterColumns > columns) {
 				if (clusterColumns > columns) {
-					const [lead, rest] = divideByColumns.plain(clusterText, columns - lineColumns, options.awidth);
+					const [lead, rest] = divideByColumns.plain(
+						clusterText,
+						columns - lineColumns, options.awidth);
 					if (sgrSequence != '') {
 						result.push(lineFragment + lead + '\u001b[m');
 					}
@@ -2959,7 +3077,7 @@ function getFoldedLines (s, options = {}) {
 		result.push(lineFragment);
 	}
 
-	return result;
+	return options.ansi ? normalizeHyperlinks(result) : result;
 }
 
 /*
@@ -3019,7 +3137,13 @@ function Unistring (s) {
 		return new Unistring(s);
 	}
 	if (typeof s == 'string') {
-		this.clusters = buildGraphemeClusters(resolveSurrogates(s));
+		if (graphemeClusterCache.has(s)) {
+			this.clusters = graphemeClusterCache.get(s).map(g => g.clone());
+		}
+		else {
+			graphemeClusterCache.set(
+				s, this.clusters = buildGraphemeClusters(resolveSurrogates(s)));
+		}
 	}
 	else if (s instanceof Array) {
 		this.clusters = [];
@@ -3314,35 +3438,58 @@ Unistring.prototype = {
  * exporting
  */
 
-Unistring.getCodePointArray = resolveSurrogates;
-Unistring.getUTF16FromCodePoint = getUTF16FromCodePoint;
-Unistring.getCodePointString = getCodePointString;
+Object.defineProperties(Unistring, {
+	getCodePointArray: {value: resolveSurrogates},
+	getUTF16FromCodePoint: {value: getUTF16FromCodePoint},
+	getCodePointString: {value: getCodePointString},
 
-Unistring.getGraphemeBreakProp = graphemeFinder;
-Unistring.getWordBreakProp = wordFinder;
-Unistring.getSentenceBreakProp = sentenceFinder;
-Unistring.getScriptProp = scriptFinder;
-Unistring.getLineBreakProp = lineBreakFinder;
+	getGraphemeBreakProp: {value: graphemeFinder},
+	getWordBreakProp: {value: wordFinder},
+	getSentenceBreakProp: {value: sentenceFinder},
+	getScriptProp: {value: scriptFinder},
+	getLineBreakProp: {value: lineBreakFinder},
 
-Unistring.getWords = getWords;
-Unistring.getSentences = getSentences;
-Unistring.getLineBreakableClusters = getLineBreakableClusters;
+	getWords: {value: getWords},
+	getSentences: {value: getSentences},
+	getLineBreakableClusters: {value: getLineBreakableClusters},
 
-Unistring.getColumnsFor = getColumnsFor;
-Unistring.divideByColumns = divideByColumns;
-Unistring.getFoldedLines = getFoldedLines;
+	getColumnsFor: {value: getColumnsFor},
+	divideByColumns: {value: divideByColumns},
+	getFoldedLines: {value: getFoldedLines},
 
-Unistring.GBP = GBP;
-Unistring.WBP = WBP;
-Unistring.SBP = SBP;
-Unistring.SCRIPT = SCRIPT;
-Unistring.LBP = LBP;
+	GBP: {value: GBP},
+	WBP: {value: WBP},
+	SBP: {value: SBP},
+	SCRIPT: {value: SCRIPT},
+	LBP: {value: LBP},
 
-Unistring.GBP_NAMES = GBP_NAMES;
-Unistring.WBP_NAMES = WBP_NAMES;
-Unistring.SBP_NAMES = SBP_NAMES;
-Unistring.SCRIPT_NAMES = SCRIPT_NAMES;
-Unistring.LBP_NAMES = LBP_NAMES;
+	GBP_NAMES: {value: GBP_NAMES},
+	WBP_NAMES: {value: WBP_NAMES},
+	SBP_NAMES: {value: SBP_NAMES},
+	SCRIPT_NAMES: {value: SCRIPT_NAMES},
+	LBP_NAMES: {value: LBP_NAMES},
+
+	awidth: {
+		get: () => {
+			return defaultAwidth;
+		},
+		set: value => {
+			if (value === 1 || value === 2) {
+				defaultAwidth = value;
+			}
+		}
+	},
+	printCacheStatus: {
+		value: () => {
+			console.log([
+				`clusterCache.size: ${clusterCache.size}`,
+				`    request count: ${clusterCacheRequestCount}`,
+				`        hit count: ${clusterCacheHitCount}`,
+				`       miss count: ${clusterCacheMissCount}`
+			].join('\n'));
+		}
+	}
+});
 
 export default Unistring;
 

@@ -3,7 +3,13 @@ function p (label, number) {
 }
 
 function esc (s) {
-	return s
+	if (s === undefined) {
+		return '`\x1b[1;36mundefined\x1b[m';
+	}
+	else if (s === null) {
+		return '`\x1b[1;36mnull\x1b[m';
+	}
+	return ('' + s)
 		.replace(/[\x00-\x1f]/g, $0 => {
 			return '\x1b[1;36m^' + String.fromCharCode($0.charCodeAt(0) + 64) + '\x1b[m';
 		});
@@ -52,6 +58,22 @@ function run (tests) {
 							`---- ${label}`,
 							`expected: ${esc(expected)}`,
 							`  actual: ${esc(actual)}`
+						);
+						if (this.stopOnFail) {
+							throw new Error('Stop on fail');
+						}
+						return false;
+					}
+					return true;
+				},
+				match: function (label, expected, actual) {
+					this.assertCount++;
+					if (!expected.test(actual)) {
+						this.failed++;
+						this.log.push(
+							`---- ${label}`,
+							`expected pattern: ${esc(expected.toString())}`,
+							`          actual: ${esc(actual)}`
 						);
 						if (this.stopOnFail) {
 							throw new Error('Stop on fail');

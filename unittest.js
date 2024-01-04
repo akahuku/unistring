@@ -47,6 +47,9 @@ const TEST_FILES = [
 // U_0940 Devanagari Vowel Sign Ii (Mc)
 const DEVANAGARI = '\u0926\u0947\u0935\u0928\u093e\u0917\u0930\u0940';
 
+const LINK_START = '\x1b]8;;file://host/path/to/target\x07';
+const LINK_END = '\x1b]8;;\x07';
+
 const tests = {
 	testFind: test => {
 		readFileByLine(
@@ -835,6 +838,74 @@ const tests = {
 			'\u001b[4m全角&#x306e;途中で分割\u001b[m', 9, options);
 		test.eq('left #4', '\u001b[4m全角の途', left4);
 		test.eq('right #4', '中で分割\u001b[m', right4);
+	},
+	testNormalizeHyperlink_folded: test => {
+		const result = Unistring.getFoldedLines(`Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do ${LINK_START}eiusmod tempor incididunt${LINK_END} ut labore et dolore magna aliqua. Ut enim ad minim veniam`, {columns: 80, ansi: true});
+
+		/*
+                                                                _______________
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor 
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam
+^^^^^^^^^^
+		 */
+		test.eq('length', 2, result.length);
+		test.match(
+			'line #1',
+			/^Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do \x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07eiusmod tempor \x1b\]8;;\x07$/,
+			result[0]);
+		test.match(
+			'line #2',
+			/^\x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07incididunt\x1b\]8;;\x07 ut labore et dolore magna aliqua. Ut enim ad minim veniam$/,
+			result[1]);
+	},
+	testNormalizeHyperlink_both: test => {
+		const result = Unistring.getFoldedLines(`Lorem ipsum dolor sit amet, ${LINK_START}consectetur adipiscing${LINK_END} elit, sed do ${LINK_START}eiusmod tempor incididunt${LINK_END} ut labore et dolore magna aliqua. Ut enim ad minim veniam`, {columns: 80, ansi: true});
+
+		/*
+                            ______________________              _______________
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor 
+incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam
+^^^^^^^^^^
+
+		 */
+		test.eq('length', 2, result.length);
+		test.match(
+			'line #1',
+			/^Lorem ipsum dolor sit amet, \x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07consectetur adipiscing\x1b\]8;;\x07 elit, sed do \x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07eiusmod tempor \x1b\]8;;\x07$/,
+			result[0]);
+		test.match(
+			'line #2',
+			/^\x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07incididunt\x1b\]8;;\x07 ut labore et dolore magna aliqua. Ut enim ad minim veniam$/,
+			result[1]);
+	},
+	testNormalizeHyperlink_multipleLines: test => {
+		const result = Unistring.getFoldedLines(`Lorem ipsum dolor sit amet, ${LINK_START}consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua${LINK_END}. Ut enim ad minim veniam`, {columns: 40, ansi: true});
+
+		/*
+                            ____________
+Lorem ipsum dolor sit amet, consectetur 
+adipiscing elit, sed do eiusmod tempor 
+incididunt ut labore et dolore magna 
+aliqua. Ut enim ad minim veniam
+^^^^^^
+		 */
+		test.eq('length', 4, result.length);
+		test.match(
+			'line #1',
+			/^Lorem ipsum dolor sit amet, \x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07consectetur \x1b\]8;;\x07$/,
+			result[0]);
+		test.match(
+			'line #2',
+			/^\x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07adipiscing elit, sed do eiusmod tempor \x1b\]8;;\x07$/,
+			result[1]);
+		test.match(
+			'line #3',
+			/^\x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07incididunt ut labore et dolore magna \x1b\]8;;\x07$/,
+			result[2]);
+		test.match(
+			'line #4',
+			/^\x1b\]8;(?:[^;]*);(?:[^\x07]+)\x07aliqua\x1b\]8;;\x07. Ut enim ad minim veniam$/,
+			result[3]);
 	}
 };
 
