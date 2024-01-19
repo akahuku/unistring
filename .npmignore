@@ -4,7 +4,5 @@ Thumbs.db
 desktop.ini
 Session.vim
 node_modules/*
-unicode-data/*
-!unicode-data/WordBreakOverrides.txt
-test/*
-!test/testRunner.js
+unicode-data/*/*.txt
+test/*/*.txt

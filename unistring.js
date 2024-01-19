@@ -1754,12 +1754,20 @@ let eastAsianWidthFinder = stub('script', () => {
 		EAW.N);
 });
 
-let defaultAwidth = 2;
 let linkCount = 0;
 
 let graphemeClusterCache = new TimelimitCache;
 let wordClusterCache = new Map([[false, new TimelimitCache], [true, new TimelimitCache]]);
 let lineBreakableClusterCache = new TimelimitCache;
+
+const eawMap = [
+	/* Neutral */    1,
+	/* Narrow */     1,
+	/* Ambiguous */  2,
+	/* Wide */       2,
+	/* Half Width */ 1,
+	/* Full Width */ 2,
+];
 
 /*
  * utility functions
@@ -2731,13 +2739,19 @@ function getColumnsFor (s, options = {}) {
 	}
 
 	if (options.ansi) {
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
-			if (!/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
-			 && !/^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)
-			 && !/^\u001b[\u0040-\u005f]$/.test(fragment)) {
-				result += getColumnsFor.plain(fragment, options.awidth);
+		const pattern = /\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f]/g;
+		let re, plainIndex = 0;
+
+		while ((re = pattern.exec(s)) !== null) {
+			if (re.index > plainIndex) {
+				result += getColumnsFor.plain(s.substring(plainIndex, re.index), options.awidth);
 			}
-		});
+			plainIndex = re.index + re[0].length;
+		}
+
+		if (plainIndex < s.length) {
+			result += getColumnsFor.plain(s.substring(plainIndex), options.awidth);
+		}
 	}
 	else {
 		result += getColumnsFor.plain(s, options.awidth);
@@ -2747,18 +2761,23 @@ function getColumnsFor (s, options = {}) {
 }
 
 getColumnsFor.plain = (s, awidth) => {
-	const eawMap = [
-		1,           /* Neutral */
-		1,           /* Narrow */
-		awidth || 2, /* Ambiguous */
-		2,           /* Wide */
-		1,           /* Half Width */
-		2,           /* Full Width */
-	];
+	/*
+	 * special handling of halfwidth katakana voiced/semi-voiced marks:
+	 * should be considered as a single grapheme, not a modifier.
+	 *
+	 * TBD: there may be other characters that require special handling
+	 */
+	s = s.replace(/[\uff9e\uff9f]/g, '_');
+
+	const oldawidth = eawMap[2];
 	let result = 0;
+	if (awidth) {
+		eawMap[2] = awidth;
+	}
 	Unistring(s).forEach(clusters => {
 		result += eawMap[eastAsianWidthFinder(clusters.codePoints[0])] || 0;
 	});
+	eawMap[2] = oldawidth;
 	return result;
 };
 
@@ -2839,21 +2858,30 @@ function divideByColumns (s, columns, options = {}) {
 
 	if (options.ansi) {
 		const clusters = [];
-		s.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
-			if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)
-			 || /^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)
-			 || /^\u001b[\u0040-\u005f]$/.test(fragment)) {
-				clusters.push([fragment, 0]);
-			}
-			else {
-				Unistring(fragment).forEach(cluster => {
+		const pattern = /\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f]/g;
+		let re, plainIndex = 0;
+
+		while ((re = pattern.exec(s)) !== null) {
+			if (re.index > plainIndex) {
+				Unistring(s.substring(plainIndex, re.index)).forEach(cluster => {
 					clusters.push([
 						cluster.rawString,
 						getColumnsFor.plain(cluster.rawString, options.awidth)
 					]);
 				});
 			}
-		});
+			clusters.push([re[0], 0]);
+			plainIndex = re.index + re[0].length;
+		}
+
+		if (plainIndex < s.length) {
+			Unistring(s.substring(plainIndex)).forEach(cluster => {
+				clusters.push([
+					cluster.rawString,
+					getColumnsFor.plain(cluster.rawString, options.awidth)
+				]);
+			});
+		}
 
 		let result = '';
 		let leftColumns = 0;
@@ -2885,7 +2913,7 @@ divideByColumns.plain = (s, columns, awidth) => {
 	const u = Unistring(s);
 	for (let i = 0; i < u.clusters.length; i++) {
 		const grapheme = u.clusters[i];
-		const graphemeColumn = getColumnsFor.plain(grapheme.rawString, awidth || defaultAwidth);
+		const graphemeColumn = getColumnsFor.plain(grapheme.rawString, awidth);
 		if (leftColumns + graphemeColumn > columns) {
 			return [
 				u.slice(0, i).toString(),
@@ -2921,40 +2949,59 @@ function getFoldedLines (s, options = {}) {
 
 	function fetchAnsiClusters (line) {
 		const result = [];
-		line.split(/(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/).forEach(fragment => {
-			// SGR reset sequence
-			//   ESC [ m
-			if (/^\u001b\[0*m$/.test(fragment)) {
-				result.push([fragment, 0, 2]);
-			}
-			// SGR (Select Graphics Rendition) sequences
-			//   ESC [ ... m
-			else if (/^\u001b\[.*?m/.test(fragment)) {
-				result.push([fragment, 0, 1]);
-			}
-			// Other CSI (Control Sequence Introducer) sequences, except SGR
-			else if (/^\u001b\[.*?[\u0040-\u007e]$/.test(fragment)) {
-				result.push([fragment, 0]);
-			}
-			// OSC (Operation System Command) sequences
-			//   ESC ] ... BEL|ESC \
-			// DCS (Device Control String) sequences
-			//   ESC P ... BEL|ESC \
-			else if (/^\u001b[\]P].+?(?:\u0007|\u001b\\)$/.test(fragment)) {
-				result.push([fragment, 0]);
-			}
-			// Other Fe sequences, except OSC,DCS
-			else if (/^\u001b[\u0040-\u005f]$/.test(fragment)) {
-				result.push([fragment, 0]);
-			}
-			// Other normal string
-			else {
-				const clusters = getLineBreakableClusters(fragment);
+		/*
+		 * group 1: SGR reset sequence
+		 *     ESC [ m
+		 *
+		 * group 2: SGR (Select Graphics Rendition) sequences
+		 *     ESC [ ... m
+		 *
+		 * group 3-1: Other CSI (Control Sequence Introducer) sequences, except SGR
+		 *     ESC [ ... <final byte>
+		 *
+		 * group 3-2: OSC (Operation System Command) sequences
+		 *         or DCS (Device Control String) sequences
+		 *   ST (String Terminator):
+		 *     BEL | ( ESC \ )
+		 *   OSC sequences
+		 *     ESC ] ... ST
+		 *   DCS sequences
+		 *     ESC P ... ST
+		 *
+		 * group 3-3: Other Fe sequences, except OSC,DCS
+		 *     ESC ... <final byte>
+		 */
+		const pattern = /(\u001b\[0*m)|(\u001b\[.*?m)|(\u001b\[.*?[\u0040-\u007e]|\u001b[\]P].+?(?:\u0007|\u001b\\)|\u001b[\u0040-\u005f])/g;
+		let re, plainIndex = 0;
+
+		while ((re = pattern.exec(line)) !== null) {
+			if (re.index > plainIndex) {
+				const clusters = getLineBreakableClusters(line.substring(plainIndex, re.index));
 				for (const cluster of clusters) {
 					result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
 				}
 			}
-		});
+
+			if (re[1]) {
+				result.push([re[1], 0, 2]);
+			}
+			else if (re[2]) {
+				result.push([re[2], 0, 1]);
+			}
+			else {
+				result.push([re[3], 0]);
+			}
+
+			plainIndex = re.index + re[0].length;
+		}
+
+		if (plainIndex < line.length) {
+			const clusters = getLineBreakableClusters(line.substring(plainIndex));
+			for (const cluster of clusters) {
+				result.push([cluster.text, getColumnsFor.plain(cluster.text, options.awidth)]);
+			}
+		}
+
 		return result;
 	}
 
@@ -3471,11 +3518,11 @@ Object.defineProperties(Unistring, {
 
 	awidth: {
 		get: () => {
-			return defaultAwidth;
+			return eawMap[2];
 		},
 		set: value => {
 			if (value === 1 || value === 2) {
-				defaultAwidth = value;
+				eawMap[2] = value;
 			}
 		}
 	},

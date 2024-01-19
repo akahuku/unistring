@@ -354,10 +354,14 @@ methods for line breaking algorithm (UAX#14):
 
 these tree methods take an option for which the following properties are available:
 
-* `columns: number` - number of column (default: 80)
+* `columns: number` - number of column (default: 80). For getFoldedLInes(), it may be an array. In that case, each element of the array is used as columns. If the array is not long enough, the last element is used as the remaining columns
 * `awidth: number` - column of ambiguous character in East Asian Width (1 or 2, default: 2)
 * `ansi: boolean` - ignore ANSI escape sequences and treat their width as 0 (default: false)
 * `characterReference: boolean` - treat SGML character reference (\&#999999;, \&#x999999; ...) as the character they represent (default: false)
+
+### Class properties
+
+* `awidth: number` - default ambiguous column if no awidth is specified in options
 
 ### Class constants
 

@@ -596,8 +596,20 @@ const tests = {
 			10, Unistring.getColumnsFor('あいうえお'));
 		test.eq('#half',
 			8, Unistring.getColumnsFor('ﾊﾝｶｸｶﾀｶﾅ'));
+		test.eq('#half-voiced-mark',
+			6, Unistring.getColumnsFor('ﾊﾟﾝｼﾞｰ'));
 		test.eq('#full',
 			12, Unistring.getColumnsFor('ＡＢＣ０１２'));
+		test.eq('CJK Unified Ideographs Extension A',
+			4, Unistring.getColumnsFor('\u3400\u4dbf'));
+		test.eq('CJK Unified Ideographs',
+			4, Unistring.getColumnsFor('\u4e00\u9fff'));
+		test.eq('CJK Compatibility Ideographs',
+			4, Unistring.getColumnsFor('\uf900\ufaff'));
+		test.eq('Plane 2 code points',
+			4, Unistring.getColumnsFor('\u{20000}\u{2fffd}'));
+		test.eq('Plane 3 code points',
+			4, Unistring.getColumnsFor('\u{30000}\u{3fffd}'));
 	},
 	testGetColumnsForAnsi: test => {
 		const options = {ansi: true};
