@@ -15,13 +15,15 @@ const args = minimist(process.argv.slice(2), {
 		'word-prop',
 		'sentence-prop',
 		'script-prop',
-		'fold'
+		'fold',
+		'east-asian-width'
 	],
 	alias: {
 		'grapheme': 'g',
 		'word': 'w',
 		'word-extended': 'W',
-		'sentence': 's'
+		'sentence': 's',
+		'east-asian-width': 'e'
 	},
 	unknown: () => false
 });
@@ -33,6 +35,26 @@ function pick (map, value) {
 		}
 	}
 	return '(N/A)';
+}
+
+function resolveCodePoints (arg) {
+	if (/(?:(?:^|,)u\+(?:[0-9a-f]+)(?:-u\+(?:[0-9a-f]+))?)+$/i.test(arg)) {
+		const result = [];
+		for (const fragment of arg.split(/,/)) {
+			if (/u\+([0-9a-f]+)-u\+([0-9a-f]+)/i.test(fragment)) {
+				const start = parseInt(RegExp.$1, 16);
+				const end = parseInt(RegExp.$2, 16);
+				for (let i = start; i <= end; i++) {
+					result.push(String.fromCodePoint(i));
+				}
+			}
+			else if (/u\+([0-9a-f]+)/i.test(fragment)) {
+				result.push(String.fromCodePoint(parseInt(RegExp.$1, 16)));
+			}
+		}
+		arg = result.join('');
+	}
+	return arg;
 }
 
 function main () {
@@ -62,14 +84,9 @@ function main () {
 		const arg = args['grapheme-prop'];
 		const codePoints = [];
 
-		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
-			codePoints.push(parseInt(RegExp.$1, 16));
-		}
-		else {
-			Unistring(arg).forEach(cluster => {
-				codePoints.push(...cluster.codePoints);
-			});
-		}
+		Unistring(resolveCodePoints(arg)).forEach(cluster => {
+			codePoints.push(...cluster.codePoints);
+		});
 
 		for (const cp of codePoints) {
 			const prop = Unistring.getGraphemeBreakProp(cp);
@@ -86,14 +103,9 @@ function main () {
 		const arg = args['word-prop'];
 		const codePoints = [];
 
-		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
-			codePoints.push(parseInt(RegExp.$1, 16));
-		}
-		else {
-			Unistring(arg).forEach(cluster => {
-				codePoints.push(...cluster.codePoints);
-			});
-		}
+		Unistring(resolveCodePoints(arg)).forEach(cluster => {
+			codePoints.push(...cluster.codePoints);
+		});
 
 		for (const cp of codePoints) {
 			const prop = Unistring.getWordBreakProp(cp);
@@ -110,14 +122,9 @@ function main () {
 		const arg = args['sentence-prop'];
 		const codePoints = [];
 
-		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
-			codePoints.push(parseInt(RegExp.$1, 16));
-		}
-		else {
-			Unistring(arg).forEach(cluster => {
-				codePoints.push(...cluster.codePoints);
-			});
-		}
+		Unistring(resolveCodePoints(arg)).forEach(cluster => {
+			codePoints.push(...cluster.codePoints);
+		});
 
 		for (const cp of codePoints) {
 			const prop = Unistring.getSentenceBreakProp(cp);
@@ -134,14 +141,9 @@ function main () {
 		const arg = args['script-prop'];
 		const codePoints = [];
 
-		if (/^u\+([0-9a-f]+)$/i.test(arg)) {
-			codePoints.push(parseInt(RegExp.$1, 16));
-		}
-		else {
-			Unistring(arg).forEach(cluster => {
-				codePoints.push(...cluster.codePoints);
-			});
-		}
+		Unistring(resolveCodePoints(arg)).forEach(cluster => {
+			codePoints.push(...cluster.codePoints);
+		});
 
 		for (const cp of codePoints) {
 			const prop = Unistring.getScriptProp(cp);
@@ -164,6 +166,25 @@ function main () {
 			console.log(line.replace(/[\s\r\n]+$/, ''));
 		}
 	}
+	else if ('east-asian-width' in args && args['east-asian-width'] != '') {
+		const arg = args['east-asian-width'];
+		const codePoints = [];
+
+		Unistring(resolveCodePoints(arg)).forEach(cluster => {
+			codePoints.push(...cluster.codePoints);
+		});
+
+		for (const cp of codePoints) {
+			const prop = Unistring.getEAWProp(cp);
+			const propString = pick(Unistring.EAW, prop);
+
+			console.log([
+				`east asian width property value for`,
+				`${Unistring.getCodePointString(cp, 'unicode')} "${String.fromCodePoint(cp)}" is`,
+				`${prop} (Unistring.EAW.${propString})`
+			].join(' '));
+		}
+	}
 	else {
 		console.log([
 			`${path.basename(new URL(import.meta.url).pathname)} [option]`,
@@ -178,15 +199,25 @@ function main () {
 			'  --grapheme-prop=<argument>',
 			'  --word-prop=<argument>',
 			'  --sentence-prop=<argument>',
-			'   * argument is arbitrary string or "U+XXXXXX"',
+			'   * argument is arbitrary string or CODEPOINTS (see below)',
 			'',
 			'options for retrieving script properties:',
 			'  --script=<argument>',
-			'   * argument is arbitrary string or "U+XXXXXX"',
+			'   * argument is arbitrary string or CODEPOINTS',
 			'',
 			'options for text folding:',
 			'  --fold=<argument>',
 			'   * argument is arbitrary string',
+			'',
+			'options for retrieving east asian width properties:',
+			'  -e --east-asian-width=<argument>',
+			'   * argument is arbitrary string or CODEPOINTS',
+			'',
+			'CODEPOINTS       := CODEPOINT ( "," CODEPOINT )*',
+			'CODEPOINT        := CODEPOINT_RANGE | CODEPOINT_SINGLE',
+			'CODEPOINT_RANGE  := CODEPOINT_SINGLE "-" CODEPOINT_SINGLE',
+			'CODEPOINT_SINGLE := "U+" HEX+',
+			'HEX              := [0-9A-F]'
 		].join('\n'));
 	}
 
