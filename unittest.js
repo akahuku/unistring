@@ -787,6 +787,14 @@ const tests = {
 		test.eq('#7', 'occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim ', result[6]);
 		test.eq('#8', 'id est laborum.', result[7]);
 	},
+	testGetFoldedLinesWhenColumnsAndTextLengthAreTheSame: test => {
+		const result = Unistring.getFoldedLines('0123456789\nABCDEFG', {
+			columns: 10
+		});
+		test.eq('#1', 2, result.length);
+		test.eq('#2', '0123456789\n', result[0]);
+		test.eq('#3', 'ABCDEFG', result[1]);
+	},
 	testDivideByColumns: test => {
 		const [left1, right1] = Unistring.divideByColumns('a\u0302pplejuice', 5);
 		test.eq('left #1', 'a\u0302pple', left1);

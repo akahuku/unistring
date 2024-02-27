@@ -3088,18 +3088,24 @@ function getFoldedLines (s, options = {}) {
 			}
 			if (lineColumns + clusterColumns > columns) {
 				if (clusterColumns > columns) {
-					const [lead, rest] = divideByColumns.plain(
+					let [lead, rest] = divideByColumns.plain(
 						clusterText,
 						columns - lineColumns, options.awidth);
+					if (rest === '\n') {
+						lead += rest;
+						rest = '';
+					}
 					if (sgrSequence != '') {
 						result.push(lineFragment + lead + '\u001b[m');
 					}
 					else {
 						result.push(lineFragment + lead);
 					}
-					breakableClusters.splice(
-						i + 1, 0,
-						[rest, getColumnsFor.plain(rest, options.awidth)]);
+					if (rest != '') {
+						breakableClusters.splice(
+							i + 1, 0,
+							[rest, getColumnsFor.plain(rest, options.awidth)]);
+					}
 					lineColumns = 0;
 					lineFragment = sgrSequence;
 				}
@@ -3121,7 +3127,9 @@ function getFoldedLines (s, options = {}) {
 			}
 		}
 
-		result.push(lineFragment);
+		if (lineFragment !== '') {
+			result.push(lineFragment);
+		}
 	}
 
 	return options.ansi ? normalizeHyperlinks(result) : result;
@@ -3495,6 +3503,7 @@ Object.defineProperties(Unistring, {
 	getSentenceBreakProp: {value: sentenceFinder},
 	getScriptProp: {value: scriptFinder},
 	getLineBreakProp: {value: lineBreakFinder},
+	getEAWProp: {value: eastAsianWidthFinder},
 
 	getWords: {value: getWords},
 	getSentences: {value: getSentences},
@@ -3509,12 +3518,14 @@ Object.defineProperties(Unistring, {
 	SBP: {value: SBP},
 	SCRIPT: {value: SCRIPT},
 	LBP: {value: LBP},
+	EAW: {value: EAW},
 
 	GBP_NAMES: {value: GBP_NAMES},
 	WBP_NAMES: {value: WBP_NAMES},
 	SBP_NAMES: {value: SBP_NAMES},
 	SCRIPT_NAMES: {value: SCRIPT_NAMES},
 	LBP_NAMES: {value: LBP_NAMES},
+	EAW_NAMES: {value: EAW_NAMES},
 
 	awidth: {
 		get: () => {
