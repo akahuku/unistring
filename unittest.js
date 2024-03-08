@@ -55,19 +55,24 @@ const tests = {
 		readFileByLine(
 			path.join(TEST_DIR, 'GraphemeBreakProperty.txt'),
 			(line, lineIndex) => {
-				let re = /^([0-9A-F]+)[^;]+;\s*(\S+)/.exec(line);
+				// target string:
+				//   0600..0605    ; Prepend # Cf   [6] ARABIC NUMBER SIGN..ARABIC NUMBER MARK ABOBE
+				//   06DD          ; Prepend # Cf       ARABIC END OF AYAH
+				let re = /^([0-9A-F]+)(?:\.\.([0-9A-F]+))?[^;]+;\s*(\S+)/.exec(line);
 				if (!re) return;
 
-				const codePoint = parseInt(re[1], 16);
-				const codePointString = Unistring.getCodePointString(codePoint, 'unicode');
-				const code = Unistring.GBP[re[2]];
-				if (code == undefined) {
-					test.fail(`${codePointString} failed: unknown property (${re[2]})`);
+				const prop = Unistring.GBP[re[3]];
+				if (prop === undefined) {
+					test.fail(`${codePointString} failed: unknown property (${re[3]})`);
 					return;
 				}
 
-				const result = Unistring.getGraphemeBreakProp(codePoint);
-				test.eq(`line ${lineIndex}: ${re[1]}`, code, result);
+				const codePointFrom = parseInt(re[1], 16);
+				const codePointTo = re[2] === undefined ? codePointFrom : parseInt(re[2], 16);
+				for (let i = codePointFrom; i <= codePointTo; i++) {
+					const result = Unistring.getGraphemeBreakProp(i);
+					test.eq(`line ${lineIndex}: ${i.toString(16)}`, prop, result);
+				}
 			},
 			() => {
 				test.done();
@@ -788,12 +793,30 @@ const tests = {
 		test.eq('#8', 'id est laborum.', result[7]);
 	},
 	testGetFoldedLinesWhenColumnsAndTextLengthAreTheSame: test => {
-		const result = Unistring.getFoldedLines('0123456789\nABCDEFG', {
+		const result1 = Unistring.getFoldedLines('0123456789\nABCDEFGHIJK\nabc', {
 			columns: 10
 		});
-		test.eq('#1', 2, result.length);
-		test.eq('#2', '0123456789\n', result[0]);
-		test.eq('#3', 'ABCDEFG', result[1]);
+		test.eq('#1-1', 4, result1.length);
+		test.eq('#1-2', '0123456789\n', result1[0]);
+		test.eq('#1-3', 'ABCDEFGHIJ', result1[1]);
+		test.eq('#1-4', 'K\n', result1[2]);
+		test.eq('#1-5', 'abc', result1[3]);
+
+		const result2 = Unistring.getFoldedLines('\x1b[1m0123456789\x1b[m\nABCDEFG', {
+			columns: 10,
+			ansi: true
+		});
+		test.eq('#2-1', 2, result2.length);
+		test.eq('#2-2', '\x1b[1m0123456789\x1b[m\n', result2[0]);
+		test.eq('#2-3', 'ABCDEFG', result2[1]);
+
+		const result3 = Unistring.getFoldedLines('\x1b[1m012345678\x1b[m*\nABCDEFG', {
+			columns: 10,
+			ansi: true
+		});
+		test.eq('#3-1', 2, result3.length);
+		test.eq('#3-2', '\x1b[1m012345678\x1b[m*\n', result3[0]);
+		test.eq('#3-3', 'ABCDEFG', result3[1]);
 	},
 	testDivideByColumns: test => {
 		const [left1, right1] = Unistring.divideByColumns('a\u0302pplejuice', 5);

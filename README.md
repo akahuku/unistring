@@ -9,7 +9,13 @@ actually simple UTF-16 sequence, so you must handle unicode's complicated
 mechanism such as surrogate pairs and combining character sequence.
 
 Unistring hides this complexity.  The currently supported Unicode version is
-14.0.0 and Unistring passes all 11454 test patterns provided by Unicode.org.
+14.0.0 and Unistring passes all test patterns[^test-patterns] provided by Unicode.org.
+
+[^test-patterns]: grapheme property test: 17953 patterns
+  grapheme break test: 602 patterns
+  word break test: 1823 patterns
+  sentence break test: 502 patterns
+  line break test: 7654 patterns
 
 ## Example
 

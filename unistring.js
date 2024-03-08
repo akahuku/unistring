@@ -3057,13 +3057,14 @@ function getFoldedLines (s, options = {}) {
 	}
 
 	while (s != '') {
-		const re = /^.*?\r?\n/.exec(s);
-		let line;
-		if (re) {
-			line = re[0];
-			s = s.substring(re[0].length);
+		let line = /^(.*?)(\r?\n)/.exec(s), newline;
+		if (line) {
+			s = s.substring(line[0].length);
+			newline = line[2];
+			line = line[1];
 		}
 		else {
+			newline = '';
 			line = s;
 			s = '';
 		}
@@ -3074,7 +3075,8 @@ function getFoldedLines (s, options = {}) {
 		let sgrSequence = '';
 		let columns = fetchColumns();
 		for (let i = 0; i < breakableClusters.length; i++) {
-			const [clusterText, clusterColumns] = breakableClusters[i];
+			let [clusterText, clusterColumns] = breakableClusters[i];
+			//console.log(`lineFragment: "${esc(lineFragment)}", clusterText: "${esc(clusterText)}", lineColumns: ${lineColumns}, clusterColumns: ${clusterColumns}`);
 
 			if (clusterColumns == 0) {
 				switch (breakableClusters[i][2]) {
@@ -3091,11 +3093,7 @@ function getFoldedLines (s, options = {}) {
 					let [lead, rest] = divideByColumns.plain(
 						clusterText,
 						columns - lineColumns, options.awidth);
-					if (rest === '\n') {
-						lead += rest;
-						rest = '';
-					}
-					if (sgrSequence != '') {
+					if (sgrSequence !== '') {
 						result.push(lineFragment + lead + '\u001b[m');
 					}
 					else {
@@ -3110,7 +3108,7 @@ function getFoldedLines (s, options = {}) {
 					lineFragment = sgrSequence;
 				}
 				else {
-					if (sgrSequence) {
+					if (sgrSequence !== '') {
 						result.push(lineFragment + '\u001b[m');
 					}
 					else {
@@ -3129,6 +3127,15 @@ function getFoldedLines (s, options = {}) {
 
 		if (lineFragment !== '') {
 			result.push(lineFragment);
+		}
+
+		if (newline !== '') {
+			if (result.length && breakableClusters.length) {
+				result[result.length - 1] += newline;
+			}
+			else {
+				result.push(newline);
+			}
 		}
 	}
 
